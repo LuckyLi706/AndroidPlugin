@@ -1,1 +1,1 @@
-include ':app', ':baseinfoplugin', ':danagerinfoplugin'
+include ':app', ':baseinfoplugin', ':danagerinfoplugin', ':cacheplugin'

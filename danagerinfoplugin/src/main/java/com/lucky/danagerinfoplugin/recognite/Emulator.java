@@ -950,9 +950,8 @@ public class Emulator {
      * (不太靠谱，暂时放弃)
      *
      * @return
-     * @throws Exception
      */
-    public static boolean hasAdbInEmulator() throws IOException {
+    public static boolean hasAdbInEmulator()  {
         boolean adbInEmulator = false;
         BufferedReader reader = null;
         try {

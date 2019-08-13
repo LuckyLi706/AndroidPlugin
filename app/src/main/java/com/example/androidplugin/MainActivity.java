@@ -1,10 +1,11 @@
 package com.example.androidplugin;
 
 import android.os.Bundle;
+import android.util.Log;
 
 import androidx.appcompat.app.AppCompatActivity;
 
-import com.lucky.baseinfoplugin.BaseInfo;
+import com.lucky.cacheplugin.internal.sp.SPUtil;
 import com.lucky.danagerinfoplugin.DangerProtector;
 
 public class MainActivity extends AppCompatActivity {
@@ -14,13 +15,15 @@ public class MainActivity extends AppCompatActivity {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_main);
 
-        BaseInfo.printAllMessage(this);
-
-        DangerProtector.isDebug(this);
         DangerProtector.isEmulator(this);
-        DangerProtector.isRoot(this);
-        DangerProtector.isXposedExsit(this);
 
+        SPUtil spUtil = SPUtil.getInstance(this, "");
 
+        SPUtil spUtil1= SPUtil.getInstance(this, "username");
+
+        spUtil.deleteFile(this);
+        spUtil1.deleteFile(this);
+
+        Log.d("ddd", spUtil.filename + "-" + spUtil1.filename);
     }
 }
