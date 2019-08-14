@@ -3,7 +3,6 @@ package com.lucky.baseinfoplugin.info;
 import android.annotation.SuppressLint;
 import android.app.ActivityManager;
 import android.bluetooth.BluetoothAdapter;
-import android.content.ContentResolver;
 import android.content.Context;
 import android.net.wifi.WifiInfo;
 import android.net.wifi.WifiManager;
@@ -11,7 +10,6 @@ import android.os.Build;
 import android.os.Environment;
 import android.os.StatFs;
 import android.provider.Settings;
-import android.util.DisplayMetrics;
 
 import com.lucky.baseinfoplugin.utils.LogUtil;
 
@@ -58,8 +56,6 @@ public class HardwareInfo {
         map.put("sd卡可用容量", availableSDCard() + "");
         map.put("系统卡总容量", totalSys() + "");
         map.put("系统卡可用容量", availableSys() + "");
-        map.put("屏幕亮度", screenBrightness(context) + "");
-        map.put("屏幕分辨率", resolution(context));
         return map;
     }
 
@@ -80,8 +76,6 @@ public class HardwareInfo {
         map.put("availableSDCard", availableSDCard() + "");
         map.put("totalSys", totalSys() + "");
         map.put("availableSys", availableSys() + "");
-        map.put("screenBrightness", screenBrightness(context) + "");
-        map.put("resolution", resolution(context));
         return map;
     }
 
@@ -111,6 +105,7 @@ public class HardwareInfo {
     }
 
     //蓝牙地址获取
+    @SuppressLint("MissingPermission")
     public String bluetoothAddress(Context context) {
         try {
             if (Build.VERSION.SDK_INT >= 18) {
@@ -163,7 +158,7 @@ public class HardwareInfo {
                     WifiManager wifiManager =
                             (WifiManager) context.getApplicationContext().getSystemService(Context.WIFI_SERVICE);
                     assert wifiManager != null;
-                    WifiInfo wifiInfo = wifiManager.getConnectionInfo();
+                    @SuppressLint("MissingPermission") WifiInfo wifiInfo = wifiManager.getConnectionInfo();
                     result = wifiInfo.getMacAddress();
                     return result.replace("=", "").replace("&", "").toLowerCase();
                 }
@@ -401,28 +396,4 @@ public class HardwareInfo {
         return 0;
     }
 
-    //屏幕亮度
-    private int screenBrightness(Context context) {
-        try {
-            if (context != null) {
-                ContentResolver resolver = context.getContentResolver();
-                return Settings.System.getInt(resolver, Settings.System.SCREEN_BRIGHTNESS);
-            }
-        } catch (Throwable e) {
-            LogUtil.w(this, e.getMessage());
-        }
-        return 0;
-    }
-
-    //屏幕分辨率
-    private String resolution(Context context) {
-        try {
-            DisplayMetrics dm = context.getResources().getDisplayMetrics();
-            return ("[" + dm.density + "," + dm.widthPixels + "," + dm.heightPixels + "," + dm.scaledDensity + "," + dm.xdpi + "," + dm.ydpi + "]");
-
-        } catch (Throwable e) {
-            LogUtil.w(this, e.getMessage());
-        }
-        return "";
-    }
 }

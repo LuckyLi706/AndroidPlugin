@@ -2,13 +2,11 @@ package com.lucky.baseinfoplugin.info;
 
 import android.annotation.SuppressLint;
 import android.content.Context;
-import android.net.ConnectivityManager;
-import android.net.NetworkInfo;
 import android.telephony.TelephonyManager;
 import android.text.TextUtils;
 
 import com.lucky.baseinfoplugin.utils.LogUtil;
-import com.lucky.baseinfoplugin.utils.PermissonUtil;
+import com.lucky.baseinfoplugin.utils.PermissionUtil;
 
 import java.util.HashMap;
 import java.util.Map;
@@ -81,7 +79,7 @@ public class SimInfo {
     private String getIMSI(Context context) {
         String ret = null;
         try {
-            if (!PermissonUtil.READ_PHONE_STATE(context)) {
+            if (!PermissionUtil.READ_PHONE_STATE(context)) {
                 LogUtil.e(this, "没有授予READ_PHONE_STATE权限");
                 return "";
             }
@@ -101,7 +99,7 @@ public class SimInfo {
     @SuppressLint("MissingPermission")
     private String getIMEI(Context context) {
         try {
-            if (!PermissonUtil.READ_PHONE_STATE(context)) {
+            if (!PermissionUtil.READ_PHONE_STATE(context)) {
                 LogUtil.e(this, "没有授予READ_PHONE_STATE权限");
                 return "";
             }
@@ -207,13 +205,13 @@ public class SimInfo {
      */
     protected String getSimSerialNumber(Context context) {
         try {
-            if (!PermissonUtil.READ_PHONE_STATE(context)) {
+            if (!PermissionUtil.READ_PHONE_STATE(context)) {
                 LogUtil.e(this, "没有授予READ_PHONE_STATE权限");
                 return "";
             }
             TelephonyManager manager =
                     (TelephonyManager) context.getSystemService(Context.TELEPHONY_SERVICE);
-            String simSerialNumber = manager.getSimSerialNumber();
+            @SuppressLint("MissingPermission") String simSerialNumber = manager.getSimSerialNumber();
             if (null != simSerialNumber && !simSerialNumber.equals("")) {
                 return simSerialNumber;
             }
@@ -231,13 +229,13 @@ public class SimInfo {
      */
     protected String getVoiceMailNumber(Context context) {
         try {
-            if (!PermissonUtil.READ_PHONE_STATE(context)) {
+            if (!PermissionUtil.READ_PHONE_STATE(context)) {
                 LogUtil.e(this, "没有授予READ_PHONE_STATE权限");
                 return "";
             }
             TelephonyManager manager =
                     (TelephonyManager) context.getSystemService(Context.TELEPHONY_SERVICE);
-            String voiceMailNumber = manager.getVoiceMailNumber();
+            @SuppressLint("MissingPermission") String voiceMailNumber = manager.getVoiceMailNumber();
             if (null != voiceMailNumber && !voiceMailNumber.equals("")) {
                 return voiceMailNumber;
             }

@@ -1,5 +1,6 @@
 package com.lucky.baseinfoplugin.info;
 
+import android.annotation.SuppressLint;
 import android.content.Context;
 import android.net.ConnectivityManager;
 import android.net.wifi.ScanResult;
@@ -9,7 +10,7 @@ import android.telephony.TelephonyManager;
 import android.util.Log;
 
 import com.lucky.baseinfoplugin.utils.LogUtil;
-import com.lucky.baseinfoplugin.utils.PermissonUtil;
+import com.lucky.baseinfoplugin.utils.PermissionUtil;
 
 import java.net.InetAddress;
 import java.net.NetworkInterface;
@@ -81,8 +82,8 @@ public class NetworkInfo {
         if (context != null) {
             ConnectivityManager mConnectivityManager = (ConnectivityManager) context
                     .getSystemService(Context.CONNECTIVITY_SERVICE);
-            if (PermissonUtil.ACCESS_NETWORK_STATE(context)) {
-                android.net.NetworkInfo mNetworkInfo = mConnectivityManager.getActiveNetworkInfo();
+            if (PermissionUtil.ACCESS_NETWORK_STATE(context)) {
+                @SuppressLint("MissingPermission") android.net.NetworkInfo mNetworkInfo = mConnectivityManager.getActiveNetworkInfo();
                 if (mNetworkInfo != null) {
                     return mNetworkInfo.isConnected();
                 }
@@ -100,11 +101,11 @@ public class NetworkInfo {
     public String getNetworkType(Context context) {
         String strNetworkType = "";
         try {
-            if (!PermissonUtil.ACCESS_NETWORK_STATE(context)) {
+            if (!PermissionUtil.ACCESS_NETWORK_STATE(context)) {
                 LogUtil.w(this, "没有授予ACCESS_NETWORK_STATE权限");
                 return "";
             }
-            android.net.NetworkInfo networkInfo =
+            @SuppressLint("MissingPermission") android.net.NetworkInfo networkInfo =
                     ((ConnectivityManager) context.getSystemService(Context.CONNECTIVITY_SERVICE)).getActiveNetworkInfo();
             if (networkInfo != null && networkInfo.isConnected()) {
                 if (networkInfo.getType() == ConnectivityManager.TYPE_WIFI) {
@@ -183,11 +184,11 @@ public class NetworkInfo {
             if (!wifiManager.isWifiEnabled()) {
                 return "";
             }
-            if (!PermissonUtil.ACCESS_WIFI_STATE(context)) {
+            if (!PermissionUtil.ACCESS_WIFI_STATE(context)) {
                 LogUtil.e(this, "没有授予ACCESS_NETWORK_STATE权限");
                 return "";
             }
-            WifiInfo wifiInfo = wifiManager.getConnectionInfo();
+            @SuppressLint("MissingPermission") WifiInfo wifiInfo = wifiManager.getConnectionInfo();
             int ipAddress = wifiInfo.getIpAddress();
             String ip = intToIp(ipAddress);
             return ip;
@@ -228,11 +229,11 @@ public class NetworkInfo {
                 WifiManager wifiManager =
                         (WifiManager) context.getApplicationContext().getSystemService(Context.WIFI_SERVICE);
                 if (wifiManager != null) {
-                    if (!PermissonUtil.ACCESS_WIFI_STATE(context)) {
+                    if (!PermissionUtil.ACCESS_WIFI_STATE(context)) {
                         LogUtil.e(this, "没有授予ACCESS_NETWORK_STATE权限");
                         return "";
                     }
-                    WifiInfo wifiInfo = wifiManager.getConnectionInfo();
+                    @SuppressLint("MissingPermission") WifiInfo wifiInfo = wifiManager.getConnectionInfo();
                     Map<String, String> map = new HashMap<>();
                     String BSSID = wifiInfo.getBSSID();
                     map.put("bssid", BSSID);
@@ -249,19 +250,20 @@ public class NetworkInfo {
         return "";
     }
 
+    @SuppressLint("MissingPermission")
     public String wifiList(Context context) {
         try {
             if (context != null) {
                 WifiManager manager =
                         (WifiManager) context.getApplicationContext().getSystemService(Context.WIFI_SERVICE);
                 assert manager != null;
-                if (!PermissonUtil.CHANGE_WIFI_STATE(context)) {
+                if (!PermissionUtil.CHANGE_WIFI_STATE(context)) {
                     LogUtil.e(this, "没有授予ACCESS_NETWORK_STATE权限");
                     return "";
                 }
                 manager.startScan();
                 StringBuffer str = new StringBuffer("");
-                if (!PermissonUtil.ACCESS_WIFI_STATE(context)) {
+                if (!PermissionUtil.ACCESS_WIFI_STATE(context)) {
                     LogUtil.w(this, "没有授予ACCESS_NETWORK_STATE权限");
                     return "";
                 }

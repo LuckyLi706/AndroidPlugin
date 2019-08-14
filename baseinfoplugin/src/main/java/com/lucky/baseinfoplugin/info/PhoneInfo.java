@@ -1,7 +1,11 @@
 package com.lucky.baseinfoplugin.info;
 
 import android.annotation.SuppressLint;
+import android.content.ContentResolver;
+import android.content.Context;
 import android.os.Build;
+import android.provider.Settings;
+import android.util.DisplayMetrics;
 
 import com.lucky.baseinfoplugin.utils.LogUtil;
 
@@ -20,7 +24,7 @@ public class PhoneInfo {
     private PhoneInfo() {
     }
 
-    public Map<String, String> getAllInfo() {
+    public Map<String, String> getAllInfo(Context context) {
         Map<String, String> map = new HashMap<>();
         map.put("设备主板", BOARD());
         map.put("设备品牌", BRAND());
@@ -49,10 +53,12 @@ public class PhoneInfo {
         map.put("系统版本值", SDK());
         map.put("系统API级别", SDK_INT());
         map.put("PREVIEW_SDK_INT", PREVIEW_SDK_INT());
+        map.put("屏幕亮度", screenBrightness(context) + "");
+        map.put("屏幕分辨率", resolution(context));
         return map;
     }
 
-    public Map<String, String> getData() {
+    public Map<String, String> getData(Context context) {
         Map<String, String> map = new HashMap<>();
         map.put("board", BOARD());
         map.put("brand", BRAND());
@@ -81,11 +87,13 @@ public class PhoneInfo {
         map.put("sdk", SDK());
         map.put("sdk_int", SDK_INT());
         map.put("preview_sdk_int", PREVIEW_SDK_INT());
+        map.put("screenbinght", screenBrightness(context) + "");
+        map.put("resolution", resolution(context));
         return map;
     }
 
-    public void printLog() {
-        Map<String, String> map = getAllInfo();
+    public void printLog(Context context) {
+        Map<String, String> map = getAllInfo(context);
         LogUtil.d("手机信息");
         Set<String> set = map.keySet();
         for (String s : set) {
@@ -231,8 +239,31 @@ public class PhoneInfo {
     }
 
     /**
-     *   Build.VERSION_CODES下对应了所有版本的版本号
+     * Build.VERSION_CODES下对应了所有版本的版本号
      */
 
+    //屏幕亮度
+    public int screenBrightness(Context context) {
+        try {
+            if (context != null) {
+                ContentResolver resolver = context.getContentResolver();
+                return Settings.System.getInt(resolver, Settings.System.SCREEN_BRIGHTNESS);
+            }
+        } catch (Throwable e) {
+            LogUtil.w(this, e.getMessage());
+        }
+        return 0;
+    }
 
+    //屏幕分辨率
+    public String resolution(Context context) {
+        try {
+            DisplayMetrics dm = context.getResources().getDisplayMetrics();
+            return ("[" + dm.density + "," + dm.widthPixels + "," + dm.heightPixels + "," + dm.scaledDensity + "," + dm.xdpi + "," + dm.ydpi + "]");
+
+        } catch (Throwable e) {
+            LogUtil.w(this, e.getMessage());
+        }
+        return "";
+    }
 }

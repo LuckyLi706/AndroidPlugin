@@ -12,8 +12,8 @@ import java.util.Map;
 
 public class BaseInfo {
 
-    public static Map<String, String> getPhoneInfo() {
-        return PhoneInfo.getInstance().getData();
+    public static Map<String, String> getPhoneInfo(Context context) {
+        return PhoneInfo.getInstance().getData(context);
     }
 
     public static Map<String, String> getNetworkInfo(Context context) {
@@ -33,7 +33,7 @@ public class BaseInfo {
     }
 
     public static void printAllMessage(Context context) {
-        PhoneInfo.getInstance().printLog();
+        PhoneInfo.getInstance().printLog(context);
         NetworkInfo.getInstance().printLog(context);
         SimInfo.getInstance().printLog(context);
         HardwareInfo.getInstance().printLog(context);
