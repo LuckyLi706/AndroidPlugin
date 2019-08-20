@@ -1,1 +1,1 @@
-include ':app', ':baseinfoplugin', ':danagerinfoplugin', ':cacheplugin'
+include ':app', ':baseinfoplugin', ':danagerinfoplugin', ':cacheplugin', ':cameraplugin', ':intentplugin'

@@ -17,17 +17,17 @@ import static android.content.Context.MODE_PRIVATE;
  * 作者：jacky on 2019/8/12 19:51
  * 邮箱：jackyli706@gmail.com
  */
-public class SPUtil {
+public class SpCache {
     private SharedPreferences.Editor editor;
     private SharedPreferences sp;
-    private static Map<String, SPUtil> map = new HashMap<>();
+    private static Map<String, SpCache> map = new HashMap<>();
     public String filename;
 
 
-    public static SPUtil getInstance(Context context, String fileName) {
-        synchronized (SPUtil.class) {
+    public static SpCache getInstance(Context context, String fileName) {
+        synchronized (SpCache.class) {
             if (!map.containsKey(fileName)) {
-                SPUtil sInstance = new SPUtil(context, fileName);
+                SpCache sInstance = new SpCache(context, fileName);
                 if (fileName == null || fileName.equals("")) {
                     sInstance.filename = context.getPackageName() + "_preferences";
                 } else {
@@ -41,7 +41,7 @@ public class SPUtil {
 
 
     @SuppressLint("CommitPrefEdits")
-    private SPUtil(Context context, String filename) {
+    private SpCache(Context context, String filename) {
         if (filename == null || filename.equals("")) {
             //文件名为空,
             // 该SharedPreferences MODE默认为MODE_PRIVATE，而且生成文件名为

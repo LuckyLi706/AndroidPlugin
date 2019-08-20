@@ -1,0 +1,13 @@
+<paths xmlns:android="http://schemas.android.com/apk/res/android">
+    <!--files-path  相当于 getFilesDir（）-->
+    <files-path name="images" path="images"/>
+    <!--cache-path  相当于 getCacheDir（）-->
+    <cache-path name="image" path="cache_image"/>
+    <!--external-path  相当于 Environment.getExternalStorageDirectory()-->
+    <external-path  name="dcim" path="DCIM"/>
+    <!--external-files-path  相当于 getExternalFilesDir("") -->
+    <external-files-path name="paly" path="freeSoft"/>
+    <!--external-cache-path  相当于 getExternalCacheDir（） -->
+    <external-cache-path  name="lei" path="."/>
+
+</paths>
