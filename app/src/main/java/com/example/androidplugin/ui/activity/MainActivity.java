@@ -13,7 +13,7 @@ public class MainActivity extends BaseActivity {
 
     @Override
     public void initData() {
-        mainValue = new String[]{"Intent", "Cache", "自定义Camera"};
+        mainValue = new String[]{"Intent", "Cache", "自定义Camera", "危险信息检测"};
         mainAdapter = new MainAdapter(this, mainValue);
         listView.setAdapter(mainAdapter);
         listView.setOnItemClickListener(this);
@@ -38,6 +38,8 @@ public class MainActivity extends BaseActivity {
             startActivity(new Intent(this, CacheActivity.class));
         } else if (i == 2) {
             startActivity(new Intent(this, CameraActivity.class));
+        } else if (i == 3) {
+            startActivity(new Intent(this, DangerInfoActivity.class));
         }
     }
 }

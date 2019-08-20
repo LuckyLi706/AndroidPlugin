@@ -36,6 +36,7 @@
         <activity android:name=".ui.activity.PicActivity" />
         <activity android:name=".ui.activity.CacheActivity" />
         <activity android:name=".ui.activity.CameraActivity" />
+        <activity android:name=".ui.activity.DangerInfoActivity" />
     </application>
 
 </manifest>
