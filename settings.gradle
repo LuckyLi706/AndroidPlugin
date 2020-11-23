@@ -1,1 +1,3 @@
+include ':commplugin'
+include ':commplugin'
 include ':app', ':baseinfoplugin', ':danagerinfoplugin', ':cacheplugin', ':cameraplugin', ':intentplugin'

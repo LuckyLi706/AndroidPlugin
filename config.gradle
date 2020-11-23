@@ -1,0 +1,6 @@
+ext {
+    bintray = [
+            user = "",   //用户名
+            key = ""     //key
+    ]
+}
