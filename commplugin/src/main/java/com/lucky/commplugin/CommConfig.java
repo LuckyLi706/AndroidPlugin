@@ -67,5 +67,9 @@ public class CommConfig {
             this.parity = parity;
             return this;
         }
+
+        public CommConfig builder() {
+            return new CommConfig(this);
+        }
     }
 }
