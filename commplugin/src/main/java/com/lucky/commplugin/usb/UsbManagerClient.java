@@ -209,7 +209,7 @@ public class UsbManagerClient {
     }
 
     /**
-     * 发送string类型的数据
+     * 发送hex string类型的数据
      *
      * @param data 数据
      */

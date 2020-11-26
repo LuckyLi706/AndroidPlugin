@@ -1,7 +1,8 @@
 <?xml version="1.0" encoding="utf-8"?>
 <LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
     android:layout_width="match_parent"
-    android:layout_height="match_parent">
+    android:layout_height="match_parent"
+    android:orientation="vertical">
 
     <LinearLayout
         android:layout_width="match_parent"
@@ -22,6 +23,29 @@
 
         <Button
             android:id="@+id/btn_usb_send_data"
+            android:layout_width="wrap_content"
+            android:layout_height="match_parent"
+            android:text="发送数据" />
+
+    </LinearLayout>
+
+    <LinearLayout
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:orientation="horizontal">
+
+        <Button
+            android:id="@+id/btn_connect_bluetooth"
+            android:layout_width="wrap_content"
+            android:layout_height="match_parent"
+            android:text="连接蓝牙设备" />
+
+        <Button
+            android:layout_width="wrap_content"
+            android:layout_height="match_parent"
+            android:text="关闭USB设备" />
+
+        <Button
             android:layout_width="wrap_content"
             android:layout_height="match_parent"
             android:text="发送数据" />

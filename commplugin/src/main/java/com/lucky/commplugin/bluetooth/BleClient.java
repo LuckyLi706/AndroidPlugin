@@ -1,7 +1,5 @@
 package com.lucky.commplugin.bluetooth;
 
-import android.annotation.SuppressLint;
-import android.app.Activity;
 import android.bluetooth.BluetoothAdapter;
 import android.bluetooth.BluetoothDevice;
 import android.bluetooth.BluetoothGatt;
@@ -9,177 +7,19 @@ import android.bluetooth.BluetoothGattCallback;
 import android.bluetooth.BluetoothGattCharacteristic;
 import android.bluetooth.BluetoothGattDescriptor;
 import android.bluetooth.BluetoothGattService;
-import android.bluetooth.BluetoothSocket;
-import android.content.Context;
-import android.content.Intent;
-import android.content.IntentFilter;
 import android.os.Build;
 
 import androidx.annotation.RequiresApi;
 
 import com.lucky.commplugin.listener.BleBlueToothListener;
-import com.lucky.commplugin.listener.ClassBlueListener;
-import com.lucky.commplugin.listener.ClassicBlueOutput;
 
-import java.io.IOException;
-import java.io.InputStream;
-import java.io.OutputStream;
 import java.lang.reflect.Field;
 import java.util.List;
-import java.util.Set;
 import java.util.UUID;
-import java.util.concurrent.Executors;
 
 import static com.lucky.commplugin.utils.HexDump.hexStringToByteArray;
 
-public class BluetoothManagerClient {
-
-    private static final BluetoothManagerClient ourInstance = new BluetoothManagerClient();
-
-    public static BluetoothManagerClient getInstance() {
-        return ourInstance;
-    }
-
-    private BluetoothManagerClient() {
-    }
-
-    private InputStream inputStream;
-    private OutputStream outputStream;
-    private BluetoothAdapter bluetoothAdapter;
-    private BluetoothDevice bluetoothDevice;
-    private BluetoothDevice bluetoothDeviceBle;
-    private BluetoothSocket socket = null;   //蓝牙设备Socket客户端
-    private static final String BLUE_UUID = "00001101-0000-1000-8000-00805F9B34FB";
-
-
-    public void initBluetooth() {
-        if (bluetoothAdapter == null) {
-            bluetoothAdapter = BluetoothAdapter.getDefaultAdapter();
-        }
-        if (bluetoothAdapter == null) {
-            return;
-        }
-        //bluetoothAdapter.isEnabled();
-    }
-
-    public void openBluetooth(Activity activity) {
-        Intent enableBtIntent = new Intent(BluetoothAdapter.ACTION_REQUEST_ENABLE);
-        activity.startActivityForResult(enableBtIntent, 1);
-    }
-
-    /**
-     * 获取已经配对的设备
-     * 返回0 表示没有配对
-     * 返回1 表示有一个配对
-     * 返回2 表示有多个配对
-     *
-     * @return
-     */
-    public int getPairDevice() {
-        @SuppressLint("MissingPermission") Set<BluetoothDevice> pairedDevices = bluetoothAdapter.getBondedDevices();
-        if (pairedDevices.size() == 1) {
-            for (BluetoothDevice device : pairedDevices) {
-                bluetoothDevice = device;
-            }
-            return 1;
-        } else if (pairedDevices.size() >= 1) {
-            return 2;
-        } else {
-            return 0;
-        }
-    }
-
-    private BluetoothDevice getBluetoothDevice() {
-        return bluetoothDevice;
-    }
-
-    private BluetoothDevice getBluetoothDeviceBle() {
-        return bluetoothDeviceBle;
-    }
-
-    public void setBluetoothDevice(BluetoothDevice mBluetoothDevice) {
-        this.bluetoothDeviceBle = mBluetoothDevice;
-    }
-
-    /**
-     * socket连接
-     *
-     * @throws IOException
-     */
-    @SuppressLint("MissingPermission")
-    public void connect() throws Exception {
-        socket = getBluetoothDevice().createRfcommSocketToServiceRecord(UUID.fromString(BLUE_UUID));
-        if (socket != null) {
-            // 连接
-            if (!socket.isConnected()) {
-                socket.connect();
-            }
-            inputStream = socket.getInputStream();
-            outputStream = socket.getOutputStream();
-        }
-    }
-
-    /**
-     * 关闭socket连接
-     */
-    public void closeClassicBlue() {
-        try {
-            if (socket != null) {
-                socket.close();
-            }
-            if (classicBlueOutput != null) {
-                classicBlueOutput.stop();
-            }
-        } catch (Exception e) {
-            e.printStackTrace();
-        }
-    }
-
-    private ClassBlueListener classBlueListener;
-
-    public void setClassicBlueListener(ClassBlueListener classBlueListener) {
-        this.classBlueListener = classBlueListener;
-    }
-
-    public void sendBuffer(String b) {
-        try {
-            outputStream.write(b.getBytes());
-        } catch (IOException e) {
-            e.printStackTrace();
-        }
-    }
-
-    private ClassicBlueOutput classicBlueOutput;
-
-    public void receiverBlue() {
-        classicBlueOutput = new ClassicBlueOutput(inputStream, classBlueListener);
-        classicBlueOutput.start();
-        Executors.newSingleThreadExecutor().submit(classicBlueOutput);
-    }
-
-    private BluetoothReceiver bluetoothReceiver;
-
-    /**
-     * 注册广播
-     *
-     * @param context
-     */
-    public void registerReceiver(Context context) {
-        bluetoothReceiver = new BluetoothReceiver();
-        IntentFilter filter = new IntentFilter();
-        filter.addAction(BluetoothAdapter.ACTION_STATE_CHANGED);
-        context.registerReceiver(bluetoothReceiver, filter);
-    }
-
-    /**
-     * 取消广播
-     *
-     * @param context
-     */
-    public void unregisterReceiver(Context context) {
-        context.unregisterReceiver(bluetoothReceiver);
-    }
-
+public class BleClient extends BluetoothManager {
 
     /**
      * Ble蓝牙连接方式
@@ -197,9 +37,9 @@ public class BluetoothManagerClient {
 
 
     @RequiresApi(api = Build.VERSION_CODES.JELLY_BEAN_MR2)
-    private void connectBle() {
+    private void connectBle(BluetoothDevice bluetoothDevice) {
         closeBleBlue();
-        bluetoothGatt = getBluetoothDeviceBle().connectGatt(context, false, callback);
+        bluetoothGatt = bluetoothDevice.connectGatt(context, false, callback);
     }
 
     @RequiresApi(api = Build.VERSION_CODES.JELLY_BEAN_MR2)
@@ -213,57 +53,13 @@ public class BluetoothManagerClient {
         }
     }
 
-    private long currentTime;
-
-    @RequiresApi(api = Build.VERSION_CODES.JELLY_BEAN_MR2)
-    @SuppressLint("MissingPermission")
-    public void startScanBle(Context context) {
 
 
-        this.context = context;
-        if (getBluetoothDeviceBle() == null) {
-            bluetoothAdapter.startLeScan(mBLEScanCallback);
-            currentTime = System.currentTimeMillis();
-        } else {
-            connectBle();
-        }
-    }
-
-    private Context context;
-
-    private void stopScanBle() {
-        bluetoothAdapter.stopLeScan(mBLEScanCallback);
-    }
-
-    //mBLEScanCallback回调函数
-    private BluetoothAdapter.LeScanCallback mBLEScanCallback = (device, rssi, scanRecord) -> {
-
-        if (device.getName() != null) {
-        }
-
-        if (System.currentTimeMillis() - currentTime > 10000) {
-            stopScanBle();
-            //BluetoothManagerClient.getInstance().blueToothListener.connect(false);
-        }
-        //打印蓝牙mac地址
-        else if (device.getName() != null && device.getName().equals(currentBleDevice)) {
-            setBluetoothDevice(device);
-            connectBle();
-            stopScanBle();
-        }
-    };
 
 
     public void sendBleOrder(String str) {
         if (writeCharacteristic != null) {
             byte[] b = hexStringToByteArray(str);
-            //将指令放置进特征中
-//            writeCharacteristic.setValue(b);
-//            //设置回复形式
-//            writeCharacteristic.setWriteType(BluetoothGattCharacteristic.WRITE_TYPE_NO_RESPONSE);
-//            //开始写数据
-//            boolean isSuccess = bluetoothGatt.writeCharacteristic(writeCharacteristic);
-//            LogUtil.d("isSuccess:" + isSuccess);
             writeCharacteristic(b);
         } else {
         }
@@ -306,6 +102,7 @@ public class BluetoothManagerClient {
         }
     }
 
+    @RequiresApi(api = Build.VERSION_CODES.KITKAT)
     private boolean writeBleDataCheck() {
         long enterTime = System.currentTimeMillis();
         while ((System.currentTimeMillis() - enterTime) < HONEY_CMD_TIMEOUT) {
@@ -425,23 +222,4 @@ public class BluetoothManagerClient {
     public void setBleListener(BleBlueToothListener blueToothListener) {
         this.blueToothListener = blueToothListener;
     }
-
-    private void startDiscoverThread() {
-        Thread mConnectThread = new Thread(() -> {
-            while (!callBackDiscovered) {
-                if (System.currentTimeMillis() - connectTime > 15000) {
-                    blueToothListener.connect(false);
-                    callBackDiscovered = true;
-                } else {
-                    try {
-                        Thread.sleep(1000);
-                    } catch (InterruptedException e) {
-                        e.printStackTrace();
-                    }
-                }
-            }
-        });
-        mConnectThread.start();
-    }
-
 }

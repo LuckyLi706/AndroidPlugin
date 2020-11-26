@@ -8,6 +8,7 @@ import androidx.appcompat.app.AppCompatActivity;
 
 import com.example.androidplugin.R;
 import com.lucky.commplugin.CommConfig;
+import com.lucky.commplugin.bluetooth.BluetoothManagerClient;
 import com.lucky.commplugin.listener.UsbConnectListener;
 import com.lucky.commplugin.listener.UsbStateListener;
 import com.lucky.commplugin.usb.UsbManagerClient;
@@ -49,12 +50,16 @@ public class CommActivity extends AppCompatActivity implements SerialInputOutput
         findViewById(R.id.btn_usb_send_data).setOnClickListener((v -> {
             UsbManagerClient.getInstance().sendBuffer("EEEEFF020000");
         }));
+
+        findViewById(R.id.btn_connect_bluetooth).setOnClickListener((v -> {
+            BluetoothManagerClient.getInstance().initBluetooth(this);
+        }));
     }
 
     @Override
     public void onNewData(byte[] data) {
         LogUtil.d(HexDump.bytesToHexString(data));
-       // runOnUiThread(() -> Toast.makeText(CommActivity.this, HexDump.bytesToHexString(data), Toast.LENGTH_SHORT).show());
+        // runOnUiThread(() -> Toast.makeText(CommActivity.this, HexDump.bytesToHexString(data), Toast.LENGTH_SHORT).show());
     }
 
     @Override
