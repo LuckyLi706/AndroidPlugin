@@ -35,15 +35,16 @@
         android:orientation="horizontal">
 
         <Button
-            android:id="@+id/btn_connect_bluetooth"
+            android:id="@+id/btn_start_scan_bluetooth"
             android:layout_width="wrap_content"
             android:layout_height="match_parent"
-            android:text="连接蓝牙设备" />
+            android:text="开始扫描蓝牙设备" />
 
         <Button
+            android:id="@+id/btn_stop_scan_bluetooth"
             android:layout_width="wrap_content"
             android:layout_height="match_parent"
-            android:text="关闭USB设备" />
+            android:text="停止扫描蓝牙设备" />
 
         <Button
             android:layout_width="wrap_content"

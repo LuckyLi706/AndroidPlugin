@@ -1,9 +1,11 @@
-package com.lucky.commplugin.bluetooth;
+package com.lucky.commplugin.bluetooth.client;
 
 import android.bluetooth.BluetoothDevice;
 import android.bluetooth.BluetoothSocket;
 
 import com.lucky.commplugin.Constants;
+import com.lucky.commplugin.bluetooth.BluetoothManager;
+import com.lucky.commplugin.bluetooth.ClassicBlueOutput;
 import com.lucky.commplugin.listener.ClassBlueListener;
 
 import java.io.IOException;
@@ -12,11 +14,36 @@ import java.io.OutputStream;
 import java.util.UUID;
 import java.util.concurrent.Executors;
 
-public class ClassicClient {
+public class ClassicClient extends BluetoothManager {
+
+    private static final ClassicClient client=new ClassicClient();
+
+    private ClassicClient(){
+
+    }
+
+    public static ClassicClient getInstance(){
+        return client;
+    }
 
     private BluetoothSocket socket;
     private InputStream inputStream;
     private OutputStream outputStream;
+
+    @Override
+    public void read() {
+
+    }
+
+    @Override
+    public void write(String data) {
+
+    }
+
+    @Override
+    public void write(byte[] b) {
+
+    }
 
     /**
      * socket连接
@@ -36,6 +63,11 @@ public class ClassicClient {
             inputStream = socket.getInputStream();
             outputStream = socket.getOutputStream();
         }
+    }
+
+    @Override
+    public void accept() {
+
     }
 
     /**

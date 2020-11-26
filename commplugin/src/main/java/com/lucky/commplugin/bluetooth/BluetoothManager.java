@@ -8,6 +8,8 @@ import android.bluetooth.BluetoothGattCallback;
 import android.bluetooth.BluetoothGattCharacteristic;
 import android.bluetooth.BluetoothGattDescriptor;
 import android.bluetooth.BluetoothGattService;
+import android.bluetooth.le.ScanCallback;
+import android.bluetooth.le.ScanResult;
 import android.content.BroadcastReceiver;
 import android.content.Context;
 import android.content.Intent;
@@ -17,6 +19,7 @@ import android.os.Build;
 import androidx.annotation.RequiresApi;
 
 import com.lucky.commplugin.listener.BleBlueToothListener;
+import com.lucky.commplugin.listener.BlueScanListener;
 import com.lucky.commplugin.utils.LogUtil;
 
 import java.lang.reflect.Field;
@@ -26,11 +29,20 @@ import java.util.UUID;
 
 import static com.lucky.commplugin.utils.HexDump.hexStringToByteArray;
 
+/**
+ * 扫描方案
+ * <code>
+ * BluetoothAdapter.startDiscovery()//可以扫描经典蓝牙和ble蓝牙两种
+ * BluetoothAdapter.startLeScan()//扫描低功耗蓝牙，在api21已经弃用，不过还是可以使用
+ * BluetoothLeScanner.startScan()//新的ble扫描方法
+ * </code>
+ */
 public abstract class BluetoothManager {
 
     private BluetoothDiscoveryReceiver bluetoothDiscoveryReceiver;
     private BluetoothAdapter bluetoothAdapter;
     protected Context context;
+    private BlueScanListener blueScanListener;
 
 
     public void initBluetooth(Context context) {
@@ -84,6 +96,7 @@ public abstract class BluetoothManager {
             if (BluetoothDevice.ACTION_FOUND.equals(action)) {
                 //发现蓝牙设备
                 BluetoothDevice device = intent.getParcelableExtra(BluetoothDevice.EXTRA_DEVICE);
+                blueScanListener.onScanResult(device);
             } else if (BluetoothAdapter.ACTION_DISCOVERY_FINISHED.equals(action)) {
                 //蓝牙搜索完成
                 // 蓝牙搜索是非常消耗系统资源开销的过程，搜索完毕后应该及时取消搜索
@@ -106,23 +119,77 @@ public abstract class BluetoothManager {
 
     /**
      * 取消广播
-     *
-     * @param context
      */
-    public void unregisterReceiver(Context context) {
+    public void unregisterReceiver() {
         context.unregisterReceiver(bluetoothReceiver);
     }
 
-    private void stopScanBle() {
-        bluetoothAdapter.stopLeScan(mBLEScanCallback);
-        bluetoothAdapter.startLeScan(mBLEScanCallback);
+    public void startScan_1(BlueScanListener blueScanListener) {
+        this.blueScanListener = blueScanListener;
+        registerDiscovery();
         bluetoothAdapter.startDiscovery();
     }
 
-    //mBLEScanCallback回调函数
-    private BluetoothAdapter.LeScanCallback mBLEScanCallback = (device, rssi, scanRecord) -> {
-        //打印蓝牙mac地址
-        stopScanBle();
+    public void stopScan_1() {
+        bluetoothAdapter.cancelDiscovery();
+        unregisterDiscovery();
+    }
+
+    @RequiresApi(api = Build.VERSION_CODES.JELLY_BEAN_MR2)
+    public void startScan_2(BlueScanListener blueScanListener) {
+        this.blueScanListener = blueScanListener;
+        bluetoothAdapter.startLeScan(leScanCallback);
+
+    }
+
+    public void stopScan_2() {
+        bluetoothAdapter.stopLeScan(leScanCallback);
+    }
+
+    public void startScan_3(BlueScanListener blueScanListener) {
+        this.blueScanListener = blueScanListener;
+        bluetoothAdapter.getBluetoothLeScanner().startScan(scanCallback);
+    }
+
+    public void stopScan_3() {
+        bluetoothAdapter.getBluetoothLeScanner().stopScan(scanCallback);
+    }
+
+    public abstract void read();
+
+    public abstract void write(String data);
+
+    public abstract void write(byte[] b);
+
+    public abstract void connect(BluetoothDevice bluetoothDevice);
+
+    public abstract void accept();
+
+    public abstract void disconnect();
+
+    private BluetoothAdapter.LeScanCallback leScanCallback = new BluetoothAdapter.LeScanCallback() {
+        @Override
+        public void onLeScan(BluetoothDevice device, int rssi, byte[] scanRecord) {
+            blueScanListener.onScanResult(device);
+        }
+    };
+
+    private ScanCallback scanCallback = new ScanCallback() {
+        @Override
+        public void onScanResult(int callbackType, ScanResult result) {
+            super.onScanResult(callbackType, result);
+            blueScanListener.onScanResult(result.getDevice());
+        }
+
+        @Override
+        public void onBatchScanResults(List<ScanResult> results) {
+            super.onBatchScanResults(results);
+        }
+
+        @Override
+        public void onScanFailed(int errorCode) {
+            super.onScanFailed(errorCode);
+        }
     };
 
 

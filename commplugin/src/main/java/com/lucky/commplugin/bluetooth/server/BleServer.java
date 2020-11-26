@@ -1,6 +1,5 @@
-package com.lucky.commplugin.bluetooth;
+package com.lucky.commplugin.bluetooth.server;
 
-import android.bluetooth.BluetoothAdapter;
 import android.bluetooth.BluetoothDevice;
 import android.bluetooth.BluetoothGatt;
 import android.bluetooth.BluetoothGattCallback;
@@ -11,6 +10,7 @@ import android.os.Build;
 
 import androidx.annotation.RequiresApi;
 
+import com.lucky.commplugin.bluetooth.BluetoothManager;
 import com.lucky.commplugin.listener.BleBlueToothListener;
 
 import java.lang.reflect.Field;
@@ -19,7 +19,7 @@ import java.util.UUID;
 
 import static com.lucky.commplugin.utils.HexDump.hexStringToByteArray;
 
-public class BleClient extends BluetoothManager {
+public class BleServer extends BluetoothManager {
 
     /**
      * Ble蓝牙连接方式
@@ -50,18 +50,6 @@ public class BleClient extends BluetoothManager {
             bluetoothGatt = null;
             writeCharacteristic = null;
             notifyCharacteristic = null;
-        }
-    }
-
-
-
-
-
-    public void sendBleOrder(String str) {
-        if (writeCharacteristic != null) {
-            byte[] b = hexStringToByteArray(str);
-            writeCharacteristic(b);
-        } else {
         }
     }
 
@@ -149,7 +137,7 @@ public class BleClient extends BluetoothManager {
                     // 开始扫描服务，安卓蓝牙开发重要步骤之一
 
                     gatt.discoverServices();
-                    startDiscoverThread();
+                    //startDiscoverThread();
                 } else if (newState == BluetoothGatt.STATE_DISCONNECTED) {
                     // 连接断开
                     /*连接断开后的相应处理*/
@@ -221,5 +209,34 @@ public class BleClient extends BluetoothManager {
 
     public void setBleListener(BleBlueToothListener blueToothListener) {
         this.blueToothListener = blueToothListener;
+    }
+
+    @Override
+    public void read() {
+
+    }
+
+    @Override
+    public void write(String data) {
+        if (writeCharacteristic != null) {
+            byte[] b = hexStringToByteArray(data);
+            writeCharacteristic(b);
+        } else {
+        }
+    }
+
+    @Override
+    public void write(byte[] b) {
+
+    }
+
+    @Override
+    public void connect(BluetoothDevice bluetoothDevice) {
+
+    }
+
+    @Override
+    public void accept() {
+
     }
 }
