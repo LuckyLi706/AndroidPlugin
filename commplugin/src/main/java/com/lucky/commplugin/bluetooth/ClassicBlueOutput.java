@@ -10,7 +10,7 @@ public class ClassicBlueOutput implements Runnable {
     private final InputStream inputStream;
     private final ClassBlueListener classBlueListener;
 
-    ClassicBlueOutput(InputStream inputStream, ClassBlueListener classBlueListener) {
+    public ClassicBlueOutput(InputStream inputStream, ClassBlueListener classBlueListener) {
         this.inputStream = inputStream;
         this.classBlueListener = classBlueListener;
     }

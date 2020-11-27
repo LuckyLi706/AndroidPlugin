@@ -6,6 +6,7 @@ public class CommConfig {
     final int dataBits;   //数据位
     final int stopBits;   //停止位
     final int parity;     //校验位
+    final String classicUUID; //经典蓝牙的UUID
 
     public int getBaudRate() {
         return baudRate;
@@ -23,6 +24,10 @@ public class CommConfig {
         return parity;
     }
 
+    public String getClassicUUID() {
+        return classicUUID;
+    }
+
     public CommConfig() {
         this(new Builder());
     }
@@ -32,6 +37,7 @@ public class CommConfig {
         dataBits = builder.dataBits;
         stopBits = builder.stopBits;
         parity = builder.parity;
+        classicUUID = builder.classicUUID;
     }
 
     public static final class Builder {
@@ -40,12 +46,14 @@ public class CommConfig {
         int dataBits;   //数据位
         int stopBits;   //停止位
         int parity;     //校验位
+        String classicUUID;  //经典蓝牙的UUID
 
         public Builder() {
             baudRate = 115200;
             dataBits = 8;
             stopBits = 1;
             parity = 0;
+            classicUUID = Constants.CLASSIC_BLUE_UUID;
         }
 
         public Builder baudRate(int baudRate) {
@@ -65,6 +73,11 @@ public class CommConfig {
 
         public Builder parity(int parity) {
             this.parity = parity;
+            return this;
+        }
+
+        public Builder classicUUID(String uuid) {
+            this.classicUUID = uuid;
             return this;
         }
 

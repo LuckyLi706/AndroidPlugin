@@ -47,11 +47,66 @@
             android:text="停止扫描蓝牙设备" />
 
         <Button
+            android:id="@+id/btn_scaned_bluetooth"
+            android:layout_width="wrap_content"
+            android:layout_height="match_parent"
+            android:text="能够被扫描到" />
+
+    </LinearLayout>
+
+
+    <LinearLayout
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:orientation="horizontal">
+
+        <Button
+            android:id="@+id/btn_start_client"
+            android:layout_width="wrap_content"
+            android:layout_height="match_parent"
+            android:text="客户端开启" />
+
+        <Button
+            android:id="@+id/btn_stop_client"
+            android:layout_width="wrap_content"
+            android:layout_height="match_parent"
+            android:text="客户端关闭" />
+
+        <Button
+            android:id="@+id/btn_client_send_data"
             android:layout_width="wrap_content"
             android:layout_height="match_parent"
             android:text="发送数据" />
 
     </LinearLayout>
 
+    <LinearLayout
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:orientation="horizontal">
 
+        <Button
+            android:id="@+id/btn_start_server"
+            android:layout_width="wrap_content"
+            android:layout_height="match_parent"
+            android:text="服务端开启" />
+
+        <Button
+            android:id="@+id/btn_stop_server"
+            android:layout_width="wrap_content"
+            android:layout_height="match_parent"
+            android:text="服务端关闭" />
+
+        <Button
+            android:id="@+id/btn_server_send_data"
+            android:layout_width="wrap_content"
+            android:layout_height="match_parent"
+            android:text="发送数据" />
+
+    </LinearLayout>
+
+    <TextView
+        android:id="@+id/tv_data"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content" />
 </LinearLayout>

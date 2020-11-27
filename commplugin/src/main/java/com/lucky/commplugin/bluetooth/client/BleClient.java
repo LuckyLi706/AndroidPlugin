@@ -1,6 +1,5 @@
 package com.lucky.commplugin.bluetooth.client;
 
-import android.bluetooth.BluetoothAdapter;
 import android.bluetooth.BluetoothDevice;
 import android.bluetooth.BluetoothGatt;
 import android.bluetooth.BluetoothGattCallback;
@@ -13,6 +12,7 @@ import androidx.annotation.RequiresApi;
 
 import com.lucky.commplugin.bluetooth.BluetoothManager;
 import com.lucky.commplugin.listener.BleBlueToothListener;
+import com.lucky.commplugin.listener.ClassBlueListener;
 
 import java.lang.reflect.Field;
 import java.util.List;
@@ -33,39 +33,6 @@ public class BleClient extends BluetoothManager {
     private UUID SERVICE_UUID;    //主服务的UUID
     private UUID RX_UUID;         //写的UUID
     private UUID NOTIFY_UUID;     //读的UUID
-
-    private String currentBleDevice;   //当前的蓝牙设备
-
-
-    @RequiresApi(api = Build.VERSION_CODES.JELLY_BEAN_MR2)
-    private void connectBle(BluetoothDevice bluetoothDevice) {
-        closeBleBlue();
-        bluetoothGatt = bluetoothDevice.connectGatt(context, false, callback);
-    }
-
-    @RequiresApi(api = Build.VERSION_CODES.JELLY_BEAN_MR2)
-    public void closeBleBlue() {
-        if (bluetoothGatt != null) {
-            bluetoothGatt.disconnect();
-            bluetoothGatt.close();
-            bluetoothGatt = null;
-            writeCharacteristic = null;
-            notifyCharacteristic = null;
-        }
-    }
-
-
-
-
-
-    public void sendBleOrder(String str) {
-        if (writeCharacteristic != null) {
-            byte[] b = hexStringToByteArray(str);
-            writeCharacteristic(b);
-        } else {
-        }
-    }
-
 
     private static long HONEY_CMD_TIMEOUT = 500;
 
@@ -220,7 +187,46 @@ public class BleClient extends BluetoothManager {
 
     private BleBlueToothListener blueToothListener;
 
-    public void setBleListener(BleBlueToothListener blueToothListener) {
-        this.blueToothListener = blueToothListener;
+    @Override
+    public void read(ClassBlueListener classBlueListener) {
+
+    }
+
+    @Override
+    public void write(String data) {
+        if (writeCharacteristic != null) {
+            byte[] b = hexStringToByteArray(data);
+            writeCharacteristic(b);
+        } else {
+        }
+    }
+
+    @Override
+    public void write(byte[] b) {
+        if (writeCharacteristic != null) {
+            writeCharacteristic(b);
+        } else {
+        }    }
+
+    @Override
+    public void connect(BluetoothDevice bluetoothDevice) throws Exception {
+        close();
+        bluetoothGatt = bluetoothDevice.connectGatt(context, false, callback);
+    }
+
+    @Override
+    public void accept() {
+
+    }
+
+    @Override
+    public void close() {
+        if (bluetoothGatt != null) {
+            bluetoothGatt.disconnect();
+            bluetoothGatt.close();
+            bluetoothGatt = null;
+            writeCharacteristic = null;
+            notifyCharacteristic = null;
+        }
     }
 }

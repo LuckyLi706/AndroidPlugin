@@ -3,11 +3,6 @@ package com.lucky.commplugin.bluetooth;
 import android.app.Activity;
 import android.bluetooth.BluetoothAdapter;
 import android.bluetooth.BluetoothDevice;
-import android.bluetooth.BluetoothGatt;
-import android.bluetooth.BluetoothGattCallback;
-import android.bluetooth.BluetoothGattCharacteristic;
-import android.bluetooth.BluetoothGattDescriptor;
-import android.bluetooth.BluetoothGattService;
 import android.bluetooth.le.ScanCallback;
 import android.bluetooth.le.ScanResult;
 import android.content.BroadcastReceiver;
@@ -18,16 +13,12 @@ import android.os.Build;
 
 import androidx.annotation.RequiresApi;
 
-import com.lucky.commplugin.listener.BleBlueToothListener;
 import com.lucky.commplugin.listener.BlueScanListener;
+import com.lucky.commplugin.listener.ClassBlueListener;
 import com.lucky.commplugin.utils.LogUtil;
 
-import java.lang.reflect.Field;
 import java.util.List;
 import java.util.Set;
-import java.util.UUID;
-
-import static com.lucky.commplugin.utils.HexDump.hexStringToByteArray;
 
 /**
  * 扫描方案
@@ -36,19 +27,19 @@ import static com.lucky.commplugin.utils.HexDump.hexStringToByteArray;
  * BluetoothAdapter.startLeScan()//扫描低功耗蓝牙，在api21已经弃用，不过还是可以使用
  * BluetoothLeScanner.startScan()//新的ble扫描方法
  * </code>
+ * <p>
+ * 官方地址：https://developer.android.com/guide/topics/connectivity/bluetooth
  */
 public abstract class BluetoothManager {
 
     private BluetoothDiscoveryReceiver bluetoothDiscoveryReceiver;
-    private BluetoothAdapter bluetoothAdapter;
+    protected BluetoothAdapter bluetoothAdapter;
     protected Context context;
     private BlueScanListener blueScanListener;
 
 
     public void initBluetooth(Context context) {
-        this.context = context;
-        registerReceiver();
-        registerDiscovery();
+        this.context = context.getApplicationContext();
         if (bluetoothAdapter == null) {
             bluetoothAdapter = BluetoothAdapter.getDefaultAdapter();
         }
@@ -58,19 +49,32 @@ public abstract class BluetoothManager {
         if (!bluetoothAdapter.isEnabled()) {
             bluetoothAdapter.enable();
         }
+        registerReceiver();
     }
 
+    /**
+     * 打开蓝牙
+     *
+     * @param activity 当前activity对象
+     */
     public void openBluetooth(Activity activity) {
         Intent enableBtIntent = new Intent(BluetoothAdapter.ACTION_REQUEST_ENABLE);
         activity.startActivityForResult(enableBtIntent, 1);
     }
 
+    /**
+     * 获取已经配对的蓝牙对象
+     *
+     * @return 配对的蓝牙集合
+     */
     public Set<BluetoothDevice> getPairDevice() {
         return bluetoothAdapter.getBondedDevices();
-
     }
 
-
+    /**
+     * 注册扫描蓝牙广播
+     * 比较耗时
+     */
     private void registerDiscovery() {
         if (bluetoothDiscoveryReceiver == null) {
             bluetoothDiscoveryReceiver = new BluetoothDiscoveryReceiver();
@@ -82,6 +86,9 @@ public abstract class BluetoothManager {
         context.registerReceiver(bluetoothDiscoveryReceiver, mFilter);
     }
 
+    /**
+     * 取消注册蓝牙广播
+     */
     private void unregisterDiscovery() {
         if (bluetoothDiscoveryReceiver != null) {
             context.unregisterReceiver(bluetoothDiscoveryReceiver);
@@ -108,7 +115,7 @@ public abstract class BluetoothManager {
     private BluetoothReceiver bluetoothReceiver;
 
     /**
-     * 注册广播
+     * 注册广播（蓝牙的开启和关闭状态检测）
      */
     public void registerReceiver() {
         bluetoothReceiver = new BluetoothReceiver();
@@ -122,6 +129,17 @@ public abstract class BluetoothManager {
      */
     public void unregisterReceiver() {
         context.unregisterReceiver(bluetoothReceiver);
+    }
+
+    /**
+     * 开启可以当前设备被扫描状态
+     */
+    public void enableDiscovery() {
+        Intent discoverableIntent =
+                new Intent(BluetoothAdapter.ACTION_REQUEST_DISCOVERABLE);
+        discoverableIntent.putExtra(BluetoothAdapter.EXTRA_DISCOVERABLE_DURATION, 300);   //设备处于可检测到模式的时间设置为 5 分钟(300 秒)
+        discoverableIntent.addFlags(Intent.FLAG_ACTIVITY_NEW_TASK);
+        context.startActivity(discoverableIntent);
     }
 
     public void startScan_1(BlueScanListener blueScanListener) {
@@ -146,26 +164,36 @@ public abstract class BluetoothManager {
         bluetoothAdapter.stopLeScan(leScanCallback);
     }
 
+    @RequiresApi(api = Build.VERSION_CODES.LOLLIPOP)
     public void startScan_3(BlueScanListener blueScanListener) {
         this.blueScanListener = blueScanListener;
         bluetoothAdapter.getBluetoothLeScanner().startScan(scanCallback);
     }
 
+    @RequiresApi(api = Build.VERSION_CODES.LOLLIPOP)
     public void stopScan_3() {
         bluetoothAdapter.getBluetoothLeScanner().stopScan(scanCallback);
     }
 
-    public abstract void read();
+    //读取数据
+    public void read(ClassBlueListener classBlueListener) {
 
+    }
+
+    //发送十六进制字符串
     public abstract void write(String data);
 
+    //发送字节数据
     public abstract void write(byte[] b);
 
-    public abstract void connect(BluetoothDevice bluetoothDevice);
+    //客户端连接
+    public abstract void connect(BluetoothDevice bluetoothDevice) throws Exception;
 
+    //服务端等待连接
     public abstract void accept();
 
-    public abstract void disconnect();
+    //关闭连接,释放资源
+    public abstract void close();
 
     private BluetoothAdapter.LeScanCallback leScanCallback = new BluetoothAdapter.LeScanCallback() {
         @Override

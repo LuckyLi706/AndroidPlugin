@@ -16,7 +16,9 @@ import com.example.androidplugin.R;
 import com.lucky.commplugin.CommConfig;
 import com.lucky.commplugin.bluetooth.BluetoothManager;
 import com.lucky.commplugin.bluetooth.client.ClassicClient;
+import com.lucky.commplugin.bluetooth.server.ClassicServer;
 import com.lucky.commplugin.listener.BlueScanListener;
+import com.lucky.commplugin.listener.ClassBlueListener;
 import com.lucky.commplugin.listener.UsbConnectListener;
 import com.lucky.commplugin.usb.UsbManagerClient;
 import com.lucky.commplugin.usb.usbserial.driver.UsbSerialDriver;
@@ -27,6 +29,8 @@ import com.lucky.commplugin.utils.LogUtil;
 import java.util.List;
 
 public class CommActivity extends AppCompatActivity implements SerialInputOutputManager.Listener {
+
+    private BluetoothDevice bluetoothDevice;
 
     @Override
     protected void onCreate(@Nullable Bundle savedInstanceState) {
@@ -61,28 +65,95 @@ public class CommActivity extends AppCompatActivity implements SerialInputOutput
         findViewById(R.id.btn_start_scan_bluetooth).setOnClickListener((v -> {
             BluetoothManager bluetoothManager = ClassicClient.getInstance();
             bluetoothManager.initBluetooth(this);
-            bluetoothManager.startScan_2(new BlueScanListener() {
+
+            BluetoothManager bluetoothManager1 = ClassicServer.getInstance();
+            bluetoothManager1.initBluetooth(this);
+            bluetoothManager.startScan_1(new BlueScanListener() {
                 @Override
                 public void onScanResult(BluetoothDevice bluetoothDevice) {
-                    LogUtil.d(bluetoothDevice.getName() + "," + bluetoothDevice.getAddress());
+                    if (bluetoothDevice.getAddress().equals("AC:37:43:76:8D:34")) {
+                        CommActivity.this.bluetoothDevice = bluetoothDevice;
+                        bluetoothManager.stopScan_1();
+
+                        Toast.makeText(CommActivity.this, "扫描成功", Toast.LENGTH_SHORT).show();
+                    }
+                    //LogUtil.d(bluetoothDevice.getName() + "," + bluetoothDevice.getAddress());
                 }
             });
         }));
+
+        findViewById(R.id.btn_scaned_bluetooth).setOnClickListener(v -> {
+            BluetoothManager bluetoothManager = ClassicClient.getInstance();
+            bluetoothManager.enableDiscovery();
+        });
 
         findViewById(R.id.btn_stop_scan_bluetooth).setOnClickListener((v -> {
             BluetoothManager bluetoothManager = ClassicClient.getInstance();
             bluetoothManager.stopScan_2();
         }));
 
+        findViewById(R.id.btn_start_client).setOnClickListener(v -> {
+            try {
+                ClassicClient.getInstance().connect(bluetoothDevice);
+
+                ClassicClient.getInstance().read(new ClassBlueListener() {
+                    @Override
+                    public void readClassicData(byte[] b) {
+                        runOnUiThread(() -> Toast.makeText(CommActivity.this, HexDump.toHexString(b), Toast.LENGTH_SHORT).show());
+                    }
+
+                    @Override
+                    public void readClassicError(Exception e) {
+                        runOnUiThread(() -> Toast.makeText(CommActivity.this, e.getMessage(), Toast.LENGTH_SHORT).show());
+                    }
+                });
+            } catch (Exception e) {
+                e.printStackTrace();
+            }
+        });
+
+        findViewById(R.id.btn_stop_client).setOnClickListener(v -> {
+            ClassicClient.getInstance().close();
+        });
+
+        findViewById(R.id.btn_client_send_data).setOnClickListener(v -> {
+            ClassicClient.getInstance().write("EEFFEE");
+        });
+
+        findViewById(R.id.btn_start_server).setOnClickListener(v -> {
+            ClassicServer.getInstance().read(new ClassBlueListener() {
+                @Override
+                public void readClassicData(byte[] b) {
+                    runOnUiThread(() -> Toast.makeText(CommActivity.this, HexDump.toHexString(b), Toast.LENGTH_SHORT).show());
+                }
+
+                @Override
+                public void readClassicError(Exception e) {
+                    runOnUiThread(() -> Toast.makeText(CommActivity.this, e.getMessage(), Toast.LENGTH_SHORT).show());
+                }
+            });
+            ClassicServer.getInstance().accept();
+
+        });
+
+        findViewById(R.id.btn_stop_server).setOnClickListener(v -> {
+            ClassicServer.getInstance().close();
+        });
+
+        findViewById(R.id.btn_server_send_data).setOnClickListener(v -> {
+            ClassicServer.getInstance().write("EEFFEE");
+        });
+
+
         //判断是否有权限
         if (ContextCompat.checkSelfPermission(this,
                 Manifest.permission.ACCESS_COARSE_LOCATION) != PackageManager.PERMISSION_GRANTED) {
 //请求权限
-            ActivityCompat.requestPermissions(this, new String[]{Manifest.permission.ACCESS_COARSE_LOCATION},0);
+            ActivityCompat.requestPermissions(this, new String[]{Manifest.permission.ACCESS_FINE_LOCATION, Manifest.permission.ACCESS_COARSE_LOCATION}, 0);
             //判断是否需要 向用户解释，为什么要申请该权限
-            if(ActivityCompat.shouldShowRequestPermissionRationale(this,
+            if (ActivityCompat.shouldShowRequestPermissionRationale(this,
                     Manifest.permission.ACCESS_COARSE_LOCATION)) {
-                Toast.makeText(this,"shouldShowRequestPermissionRationale",
+                Toast.makeText(this, "shouldShowRequestPermissionRationale",
                         Toast.LENGTH_SHORT).show();
             }
         }

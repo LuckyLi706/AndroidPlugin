@@ -28,10 +28,21 @@ public class LogUtil {
         }
     }
 
+    public static void w(String warn) {
+        if (isDebug) {
+            Log.d(TAG, "--------" + warn + "--------");
+        }
+    }
+
+    public static void e(String error) {
+        if (isDebug) {
+            Log.d(TAG, "--------" + error + "--------");
+        }
+    }
+
     public static void d(String info) {
         if (isDebug) {
             Log.d(TAG, "--------" + info + "--------");
-            //Log.d(TAG, "         -----------------------          ");
         }
     }
 }
