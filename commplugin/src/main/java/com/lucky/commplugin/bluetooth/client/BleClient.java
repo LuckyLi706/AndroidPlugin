@@ -206,18 +206,9 @@ public class BleClient extends BluetoothManager {
         if (writeCharacteristic != null) {
             writeCharacteristic(b);
         } else {
-        }    }
-
-    @Override
-    public void connect(BluetoothDevice bluetoothDevice) throws Exception {
-        close();
-        bluetoothGatt = bluetoothDevice.connectGatt(context, false, callback);
+        }
     }
 
-    @Override
-    public void accept() {
-
-    }
 
     @Override
     public void close() {

@@ -103,6 +103,12 @@
             android:layout_height="match_parent"
             android:text="发送数据" />
 
+        <EditText
+            android:id="@+id/et_data"
+            android:layout_width="50dp"
+            android:layout_height="wrap_content"
+            android:maxLength="10" />
+
     </LinearLayout>
 
     <TextView

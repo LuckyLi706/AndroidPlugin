@@ -13,12 +13,16 @@ import android.os.Build;
 
 import androidx.annotation.RequiresApi;
 
+import com.lucky.commplugin.listener.ClientConnectListener;
 import com.lucky.commplugin.listener.BlueScanListener;
 import com.lucky.commplugin.listener.ClassBlueListener;
+import com.lucky.commplugin.listener.ServerAcceptListener;
 import com.lucky.commplugin.utils.LogUtil;
 
 import java.util.List;
 import java.util.Set;
+import java.util.concurrent.ExecutorService;
+import java.util.concurrent.Executors;
 
 /**
  * 扫描方案
@@ -32,10 +36,13 @@ import java.util.Set;
  */
 public abstract class BluetoothManager {
 
+
     private BluetoothDiscoveryReceiver bluetoothDiscoveryReceiver;
     protected BluetoothAdapter bluetoothAdapter;
     protected Context context;
+    protected ExecutorService executorService = Executors.newFixedThreadPool(6);
     private BlueScanListener blueScanListener;
+    protected BlueConnectState blueConnectState = BlueConnectState.CONNECT_UNKNOWN;
 
 
     public void initBluetooth(Context context) {
@@ -187,10 +194,14 @@ public abstract class BluetoothManager {
     public abstract void write(byte[] b);
 
     //客户端连接
-    public abstract void connect(BluetoothDevice bluetoothDevice) throws Exception;
+    public void connect(BluetoothDevice bluetoothDevice, ClientConnectListener ClientConnectListener) throws Exception {
+
+    }
 
     //服务端等待连接
-    public abstract void accept();
+    public void accept(ServerAcceptListener serverAcceptListener) {
+
+    }
 
     //关闭连接,释放资源
     public abstract void close();

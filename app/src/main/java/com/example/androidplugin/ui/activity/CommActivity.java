@@ -2,8 +2,10 @@ package com.example.androidplugin.ui.activity;
 
 import android.Manifest;
 import android.bluetooth.BluetoothDevice;
+import android.bluetooth.BluetoothSocket;
 import android.content.pm.PackageManager;
 import android.os.Bundle;
+import android.widget.EditText;
 import android.widget.Toast;
 
 import androidx.annotation.NonNull;
@@ -19,6 +21,8 @@ import com.lucky.commplugin.bluetooth.client.ClassicClient;
 import com.lucky.commplugin.bluetooth.server.ClassicServer;
 import com.lucky.commplugin.listener.BlueScanListener;
 import com.lucky.commplugin.listener.ClassBlueListener;
+import com.lucky.commplugin.listener.ClientConnectListener;
+import com.lucky.commplugin.listener.ServerAcceptListener;
 import com.lucky.commplugin.listener.UsbConnectListener;
 import com.lucky.commplugin.usb.UsbManagerClient;
 import com.lucky.commplugin.usb.usbserial.driver.UsbSerialDriver;
@@ -31,13 +35,14 @@ import java.util.List;
 public class CommActivity extends AppCompatActivity implements SerialInputOutputManager.Listener {
 
     private BluetoothDevice bluetoothDevice;
+    private EditText et_data;
 
     @Override
     protected void onCreate(@Nullable Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_comm);
 
-
+        et_data = findViewById(R.id.et_data);
         findViewById(R.id.btn_connect_usb).setOnClickListener((v -> {
             CommConfig commConfig = new CommConfig.Builder().builder();
             UsbManagerClient.getInstance().init(this, commConfig, null);
@@ -93,23 +98,33 @@ public class CommActivity extends AppCompatActivity implements SerialInputOutput
         }));
 
         findViewById(R.id.btn_start_client).setOnClickListener(v -> {
-            try {
-                ClassicClient.getInstance().connect(bluetoothDevice);
-
-                ClassicClient.getInstance().read(new ClassBlueListener() {
-                    @Override
-                    public void readClassicData(byte[] b) {
-                        runOnUiThread(() -> Toast.makeText(CommActivity.this, HexDump.toHexString(b), Toast.LENGTH_SHORT).show());
-                    }
-
-                    @Override
-                    public void readClassicError(Exception e) {
-                        runOnUiThread(() -> Toast.makeText(CommActivity.this, e.getMessage(), Toast.LENGTH_SHORT).show());
-                    }
-                });
-            } catch (Exception e) {
-                e.printStackTrace();
+            if (bluetoothDevice == null) {
+                runOnUiThread(() -> Toast.makeText(CommActivity.this, "设备未发现", Toast.LENGTH_SHORT).show());
+                return;
             }
+            ClassicClient.getInstance().connect(bluetoothDevice, new ClientConnectListener() {
+                @Override
+                public void connectSuccess() {
+                    runOnUiThread(() -> Toast.makeText(CommActivity.this, "连接了", Toast.LENGTH_SHORT).show());
+                    ClassicClient.getInstance().read(new ClassBlueListener() {
+                        @Override
+                        public void readClassicData(byte[] b) {
+                            runOnUiThread(() -> Toast.makeText(CommActivity.this, new String(b), Toast.LENGTH_SHORT).show());
+                        }
+
+                        @Override
+                        public void readClassicError(Exception e) {
+                          //  runOnUiThread(() -> Toast.makeText(CommActivity.this, "读取异常:" + e.getMessage(), Toast.LENGTH_SHORT).show());
+                        }
+                    });
+                }
+
+                @Override
+                public void connectFail(Exception e) {
+                    runOnUiThread(() -> Toast.makeText(CommActivity.this, "连接异常" + e.getMessage(), Toast.LENGTH_SHORT).show());
+                }
+            });
+
         });
 
         findViewById(R.id.btn_stop_client).setOnClickListener(v -> {
@@ -117,23 +132,35 @@ public class CommActivity extends AppCompatActivity implements SerialInputOutput
         });
 
         findViewById(R.id.btn_client_send_data).setOnClickListener(v -> {
-            ClassicClient.getInstance().write("EEFFEE");
+            ClassicClient.getInstance().write(et_data.getText().toString().getBytes());
         });
 
         findViewById(R.id.btn_start_server).setOnClickListener(v -> {
-            ClassicServer.getInstance().read(new ClassBlueListener() {
+
+            ClassicServer.getInstance().accept(new ServerAcceptListener() {
                 @Override
-                public void readClassicData(byte[] b) {
-                    runOnUiThread(() -> Toast.makeText(CommActivity.this, HexDump.toHexString(b), Toast.LENGTH_SHORT).show());
+                public void connectSuccess(BluetoothSocket bluetoothSocket) {
+
+                    runOnUiThread(() -> Toast.makeText(CommActivity.this, bluetoothSocket.getRemoteDevice().getAddress() + "连接了", Toast.LENGTH_SHORT).show());
+                    ClassicServer.getInstance().read(new ClassBlueListener() {
+                        @Override
+                        public void readClassicData(byte[] b) {
+                            runOnUiThread(() -> Toast.makeText(CommActivity.this, new String(b), Toast.LENGTH_SHORT).show());
+                        }
+
+                        @Override
+                        public void readClassicError(Exception e) {
+                            runOnUiThread(() -> Toast.makeText(CommActivity.this, "读取异常:" + e.getMessage(), Toast.LENGTH_SHORT).show());
+                        }
+                    });
                 }
 
                 @Override
-                public void readClassicError(Exception e) {
-                    runOnUiThread(() -> Toast.makeText(CommActivity.this, e.getMessage(), Toast.LENGTH_SHORT).show());
+                public void connectFail(Exception e) {
+                    runOnUiThread(() -> Toast.makeText(CommActivity.this, "连接异常" + e.getMessage(), Toast.LENGTH_SHORT).show());
+
                 }
             });
-            ClassicServer.getInstance().accept();
-
         });
 
         findViewById(R.id.btn_stop_server).setOnClickListener(v -> {
@@ -141,7 +168,7 @@ public class CommActivity extends AppCompatActivity implements SerialInputOutput
         });
 
         findViewById(R.id.btn_server_send_data).setOnClickListener(v -> {
-            ClassicServer.getInstance().write("EEFFEE");
+            ClassicServer.getInstance().write(et_data.getText().toString().getBytes());
         });
 
 
