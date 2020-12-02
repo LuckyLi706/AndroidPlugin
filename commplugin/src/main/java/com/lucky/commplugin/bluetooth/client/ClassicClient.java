@@ -181,9 +181,9 @@ public class ClassicClient extends BluetoothManager {
     public void write(byte[] b) {
         try {
             if (blueConnectState == BlueConnectState.CONNECT_SUCCESS) {
-                blueConnectState = BlueConnectState.CONNECT_UNKNOWN;
                 outputStream.write(b);
             } else {
+                blueConnectState = BlueConnectState.CONNECT_UNKNOWN;
                 LogUtil.w("蓝牙连接失败,不可以读取数据");
             }
         } catch (IOException e) {

@@ -76,13 +76,13 @@ public class CommActivity extends AppCompatActivity implements SerialInputOutput
             bluetoothManager.startScan_1(new BlueScanListener() {
                 @Override
                 public void onScanResult(BluetoothDevice bluetoothDevice) {
-                    if (bluetoothDevice.getAddress().equals("AC:37:43:76:8D:34")) {
+                    LogUtil.d(bluetoothDevice.getName() + "," + bluetoothDevice.getAddress());
+                    if (bluetoothDevice.getAddress().equals("AC:92:32:E5:E1:73")) {
                         CommActivity.this.bluetoothDevice = bluetoothDevice;
                         bluetoothManager.stopScan_1();
 
                         Toast.makeText(CommActivity.this, "扫描成功", Toast.LENGTH_SHORT).show();
                     }
-                    //LogUtil.d(bluetoothDevice.getName() + "," + bluetoothDevice.getAddress());
                 }
             });
         }));
@@ -114,7 +114,7 @@ public class CommActivity extends AppCompatActivity implements SerialInputOutput
 
                         @Override
                         public void readClassicError(Exception e) {
-                          //  runOnUiThread(() -> Toast.makeText(CommActivity.this, "读取异常:" + e.getMessage(), Toast.LENGTH_SHORT).show());
+                            //  runOnUiThread(() -> Toast.makeText(CommActivity.this, "读取异常:" + e.getMessage(), Toast.LENGTH_SHORT).show());
                         }
                     });
                 }
