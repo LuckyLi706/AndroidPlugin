@@ -35,8 +35,8 @@ public class ClassicServer extends BluetoothManager {
 
     @Override
     public void read(ClassBlueListener classBlueListener) {
-        if (bluetoothSocket == null) {
-            LogUtil.e(this, "没有客户端连接");
+        if (bluetoothSocket == null || !bluetoothSocket.isConnected()) {
+            classBlueListener.readClassicError(new Exception(Constants.BLUE_EXCEPTION_NO_CLIENT_CONNECT));
             return;
         }
         if (readRunnable == null) {
@@ -47,33 +47,33 @@ public class ClassicServer extends BluetoothManager {
     }
 
     @Override
-    public void write(String data) {
-        try {
-            if (outputStream != null) {
-                outputStream.write(HexDump.hexStringToByteArray(data));
-            }
-        } catch (IOException e) {
-            LogUtil.e(this, e.getMessage());
+    public void write(String data) throws Exception {
+        if (bluetoothSocket != null && bluetoothSocket.isConnected() && outputStream != null) {
+            outputStream.write(HexDump.hexStringToByteArray(data));
+        } else {
+            throw new Exception(Constants.BLUE_EXCEPTION_NO_CLIENT_CONNECT);
         }
     }
 
     @Override
-    public void write(byte[] b) {
-        try {
-            if (outputStream != null) {
-                outputStream.write(b);
-            }
-        } catch (IOException e) {
-            LogUtil.e(this, e.getMessage());
+    public void write(byte[] b) throws Exception {
+        if (bluetoothSocket != null && bluetoothSocket.isConnected() && outputStream != null) {
+            outputStream.write(b);
+        } else {
+            throw new Exception(Constants.BLUE_EXCEPTION_NO_CLIENT_CONNECT);
         }
     }
 
     @Override
     public void accept(ServerAcceptListener serverAcceptListener) {
-        if (acceptRunnable == null) {
-            acceptRunnable = new AcceptRunnable(serverAcceptListener);
+        if (bluetoothSocket == null || !bluetoothSocket.isConnected()) {
+            if (acceptRunnable == null) {
+                acceptRunnable = new AcceptRunnable(serverAcceptListener);
+            }
+            executorService.submit(acceptRunnable);
+        } else {
+            serverAcceptListener.connectFail(new Exception(Constants.BLUE_EXCEPTION_SERVER_CONNECT));
         }
-        executorService.submit(acceptRunnable);
     }
 
     @Override
@@ -93,6 +93,11 @@ public class ClassicServer extends BluetoothManager {
                 e.printStackTrace();
             }
         }
+    }
+
+    @Override
+    public void release() {
+        executorService.shutdown();
     }
 
     private AcceptRunnable acceptRunnable;
@@ -125,7 +130,6 @@ public class ClassicServer extends BluetoothManager {
                     socket = mmServerSocket.accept();
                     inputStream = socket.getInputStream();
                     outputStream = socket.getOutputStream();
-                    serverAcceptListener.connectSuccess(socket);
                 } catch (IOException e) {
                     serverAcceptListener.connectFail(e);
                     LogUtil.e(this, "Socket's accept() method failed" + e);
@@ -136,6 +140,7 @@ public class ClassicServer extends BluetoothManager {
                     // A connection was accepted. Perform work associated with
                     // the connection in a separate thread.
                     manageMyConnectedSocket(socket);
+                    serverAcceptListener.connectSuccess(socket);
                     //mmServerSocket.close();
                     break;
                 }
@@ -184,8 +189,11 @@ public class ClassicServer extends BluetoothManager {
                     byte[] date1 = new byte[len];
                     System.arraycopy(date, 0, date1, 0, len);
                     classBlueListener.readClassicData(date1);
-                } catch (IOException e) {
+                } catch (Exception e) {
                     classBlueListener.readClassicError(e);
+                    if (bluetoothSocket != null && !bluetoothSocket.isConnected()) {
+                        isRunning = false;
+                    }
                 }
             }
         }

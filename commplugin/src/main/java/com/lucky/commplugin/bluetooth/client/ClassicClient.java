@@ -5,7 +5,6 @@ import android.bluetooth.BluetoothDevice;
 import android.bluetooth.BluetoothSocket;
 
 import com.lucky.commplugin.Constants;
-import com.lucky.commplugin.bluetooth.BlueConnectState;
 import com.lucky.commplugin.bluetooth.BluetoothManager;
 import com.lucky.commplugin.listener.ClassBlueListener;
 import com.lucky.commplugin.listener.ClientConnectListener;
@@ -52,7 +51,8 @@ public class ClassicClient extends BluetoothManager {
         public void run() {
             try {
                 if (bluetoothDevice == null) {
-                    ClientConnectListener.connectFail(new Exception("bluetoothDevice is null"));
+                    ClientConnectListener.connectFail(new Exception(Constants.BLUE_EXCEPTION_CLIENT_IS_NULL));
+                    return;
                 }
                 socket = bluetoothDevice.createRfcommSocketToServiceRecord(UUID.fromString(Constants.CLASSIC_BLUE_UUID));
                 if (socket != null) {
@@ -63,17 +63,14 @@ public class ClassicClient extends BluetoothManager {
                     inputStream = socket.getInputStream();
                     outputStream = socket.getOutputStream();
                 }
-                blueConnectState = BlueConnectState.CONNECT_SUCCESS;
                 ClientConnectListener.connectSuccess();
             } catch (Exception e) {
-                blueConnectState = BlueConnectState.CONNECT_FAIL;
                 ClientConnectListener.connectFail(e);
             }
         }
 
         public void close() {
             try {
-                blueConnectState = BlueConnectState.CONNECT_UNKNOWN;
                 if (socket != null) {
                     socket.close();
                 }
@@ -87,11 +84,15 @@ public class ClassicClient extends BluetoothManager {
                     outputStream.close();
                 }
                 readRunnable = null;
-                executorService.shutdown();
             } catch (Exception e) {
                 e.printStackTrace();
             }
         }
+    }
+
+    @Override
+    public void release() {
+        executorService.shutdown();
     }
 
     private class ReadRunnable implements Runnable {
@@ -123,9 +124,12 @@ public class ClassicClient extends BluetoothManager {
                     byte[] date1 = new byte[len];
                     System.arraycopy(date, 0, date1, 0, len);
                     classBlueListener.readClassicData(date1);
-                } catch (IOException e) {
-                    blueConnectState = BlueConnectState.CONNECT_UNKNOWN;
+                } catch (Exception e) {
                     classBlueListener.readClassicError(e);
+                    //断开连接取消接收数据线程
+                    if (socket != null && !socket.isConnected()) {
+                        isRunning = false;
+                    }
                 }
             }
         }
@@ -135,13 +139,13 @@ public class ClassicClient extends BluetoothManager {
      * socket连接
      */
     public void connect(BluetoothDevice bluetoothDevice, ClientConnectListener ClientConnectListener) {
-        if (blueConnectState == BlueConnectState.CONNECT_UNKNOWN || blueConnectState == BlueConnectState.CONNECT_FAIL) {
+        if (socket == null || !socket.isConnected()) {
             if (connectRunnable == null) {
                 connectRunnable = new ConnectRunnable(bluetoothDevice, ClientConnectListener);
             }
             executorService.submit(connectRunnable);
         } else {
-            LogUtil.e("蓝牙正在连接或者已经连接上了");
+            ClientConnectListener.connectFail(new Exception(Constants.BLUE_EXCEPTION_CLIENT_CONNECT));
         }
     }
 
@@ -154,40 +158,30 @@ public class ClassicClient extends BluetoothManager {
 
     @Override
     public void read(ClassBlueListener classBlueListener) {
-        if (readRunnable == null) {
+        if (socket != null && socket.isConnected() && outputStream != null) {
             readRunnable = new ReadRunnable(inputStream, classBlueListener);
             readRunnable.start();
             executorService.submit(readRunnable);
         } else {
-            LogUtil.w("正在读取数据");
+            classBlueListener.readClassicError(new Exception(Constants.BLUE_EXCEPTION_CLIENT_CONNECT_FAIL));
         }
     }
 
     @Override
-    public void write(String data) {
-        try {
-            if (blueConnectState == BlueConnectState.CONNECT_SUCCESS) {
-                blueConnectState = BlueConnectState.CONNECT_UNKNOWN;
-                outputStream.write(HexDump.hexStringToByteArray(data));
-            } else {
-                LogUtil.w("蓝牙连接失败,不可以读取数据");
-            }
-        } catch (IOException e) {
-            LogUtil.e(this, e.getMessage());
+    public void write(String data) throws Exception {
+        if (socket != null && socket.isConnected()) {
+            outputStream.write(HexDump.hexStringToByteArray(data));
+        } else {
+            throw new Exception(Constants.BLUE_EXCEPTION_CLIENT_CONNECT_FAIL);
         }
     }
 
     @Override
-    public void write(byte[] b) {
-        try {
-            if (blueConnectState == BlueConnectState.CONNECT_SUCCESS) {
-                outputStream.write(b);
-            } else {
-                blueConnectState = BlueConnectState.CONNECT_UNKNOWN;
-                LogUtil.w("蓝牙连接失败,不可以读取数据");
-            }
-        } catch (IOException e) {
-            LogUtil.e(this, e.getMessage());
+    public void write(byte[] b) throws Exception {
+        if (socket != null && socket.isConnected()) {
+            outputStream.write(b);
+        } else {
+            throw new Exception(Constants.BLUE_EXCEPTION_CLIENT_CONNECT_FAIL);
         }
     }
 }

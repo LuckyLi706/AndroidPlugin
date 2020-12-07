@@ -77,7 +77,7 @@ public class CommActivity extends AppCompatActivity implements SerialInputOutput
                 @Override
                 public void onScanResult(BluetoothDevice bluetoothDevice) {
                     LogUtil.d(bluetoothDevice.getName() + "," + bluetoothDevice.getAddress());
-                    if (bluetoothDevice.getAddress().equals("AC:92:32:E5:E1:73")) {
+                    if (bluetoothDevice.getAddress().equals("AC:37:43:76:8D:34")) {
                         CommActivity.this.bluetoothDevice = bluetoothDevice;
                         bluetoothManager.stopScan_1();
 
@@ -94,7 +94,7 @@ public class CommActivity extends AppCompatActivity implements SerialInputOutput
 
         findViewById(R.id.btn_stop_scan_bluetooth).setOnClickListener((v -> {
             BluetoothManager bluetoothManager = ClassicClient.getInstance();
-            bluetoothManager.stopScan_2();
+            bluetoothManager.stopScan_1();
         }));
 
         findViewById(R.id.btn_start_client).setOnClickListener(v -> {
@@ -114,7 +114,7 @@ public class CommActivity extends AppCompatActivity implements SerialInputOutput
 
                         @Override
                         public void readClassicError(Exception e) {
-                            //  runOnUiThread(() -> Toast.makeText(CommActivity.this, "读取异常:" + e.getMessage(), Toast.LENGTH_SHORT).show());
+                            runOnUiThread(() -> Toast.makeText(CommActivity.this, "读取异常:" + e.getMessage(), Toast.LENGTH_SHORT).show());
                         }
                     });
                 }
@@ -132,7 +132,11 @@ public class CommActivity extends AppCompatActivity implements SerialInputOutput
         });
 
         findViewById(R.id.btn_client_send_data).setOnClickListener(v -> {
-            ClassicClient.getInstance().write(et_data.getText().toString().getBytes());
+            try {
+                ClassicClient.getInstance().write(et_data.getText().toString().getBytes());
+            } catch (Exception e) {
+                runOnUiThread(() -> Toast.makeText(CommActivity.this, "读取异常" + e.getMessage(), Toast.LENGTH_SHORT).show());
+            }
         });
 
         findViewById(R.id.btn_start_server).setOnClickListener(v -> {
@@ -168,7 +172,11 @@ public class CommActivity extends AppCompatActivity implements SerialInputOutput
         });
 
         findViewById(R.id.btn_server_send_data).setOnClickListener(v -> {
-            ClassicServer.getInstance().write(et_data.getText().toString().getBytes());
+            try {
+                ClassicServer.getInstance().write(et_data.getText().toString().getBytes());
+            } catch (Exception e) {
+                runOnUiThread(() -> Toast.makeText(CommActivity.this, "读取异常" + e.getMessage(), Toast.LENGTH_SHORT).show());
+            }
         });
 
 
@@ -190,7 +198,6 @@ public class CommActivity extends AppCompatActivity implements SerialInputOutput
     @Override
     public void onNewData(byte[] data) {
         LogUtil.d(HexDump.bytesToHexString(data));
-        // runOnUiThread(() -> Toast.makeText(CommActivity.this, HexDump.bytesToHexString(data), Toast.LENGTH_SHORT).show());
     }
 
     @Override

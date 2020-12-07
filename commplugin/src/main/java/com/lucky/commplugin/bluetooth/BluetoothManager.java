@@ -119,15 +119,16 @@ public abstract class BluetoothManager {
         }
     }
 
-    private BluetoothReceiver bluetoothReceiver;
+    private BluetoothStateReceiver bluetoothReceiver;
 
     /**
      * 注册广播（蓝牙的开启和关闭状态检测）
      */
     public void registerReceiver() {
-        bluetoothReceiver = new BluetoothReceiver();
+        bluetoothReceiver = new BluetoothStateReceiver();
         IntentFilter filter = new IntentFilter();
         filter.addAction(BluetoothAdapter.ACTION_STATE_CHANGED);
+        filter.addAction(BluetoothDevice.ACTION_BOND_STATE_CHANGED);
         context.registerReceiver(bluetoothReceiver, filter);
     }
 
@@ -188,10 +189,10 @@ public abstract class BluetoothManager {
     }
 
     //发送十六进制字符串
-    public abstract void write(String data);
+    public abstract void write(String data) throws Exception;
 
     //发送字节数据
-    public abstract void write(byte[] b);
+    public abstract void write(byte[] b) throws Exception;
 
     //客户端连接
     public void connect(BluetoothDevice bluetoothDevice, ClientConnectListener ClientConnectListener) throws Exception {
@@ -203,8 +204,12 @@ public abstract class BluetoothManager {
 
     }
 
-    //关闭连接,释放资源
+    //关闭连接蓝牙连接
     public abstract void close();
+
+    public void release() {
+
+    }
 
     private BluetoothAdapter.LeScanCallback leScanCallback = new BluetoothAdapter.LeScanCallback() {
         @Override
@@ -232,7 +237,7 @@ public abstract class BluetoothManager {
     };
 
 
-    public static class BluetoothReceiver extends BroadcastReceiver {
+    private static class BluetoothStateReceiver extends BroadcastReceiver {
 
         @Override
         public void onReceive(Context context, Intent intent) {
@@ -255,6 +260,16 @@ public abstract class BluetoothManager {
                         LogUtil.d("STATE_TURNING_ON 手机蓝牙正在开启");
                         break;
                 }
+            } else if (action.equals(BluetoothDevice.ACTION_BOND_STATE_CHANGED)) {
+                /**
+                 * int BOND_NONE = 10; //配对没有成功
+                 * int BOND_BONDING = 11; //配对中
+                 * int BOND_BONDED = 12; //配对成功
+                 */
+                int state = intent.getIntExtra(BluetoothDevice.EXTRA_BOND_STATE, BluetoothDevice.BOND_NONE); //当前的配对的状态
+                int state2 = intent.getIntExtra(BluetoothDevice.EXTRA_PREVIOUS_BOND_STATE, BluetoothDevice.BOND_NONE); //前一次的配对状态
+                BluetoothDevice device = intent.getParcelableExtra(BluetoothDevice.EXTRA_DEVICE); //配对的设备信息
+                LogUtil.d(state + "," + state2);
             }
         }
     }
