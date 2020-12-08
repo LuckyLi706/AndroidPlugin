@@ -10,4 +10,7 @@ public class Constants {
 
     public static final String BLUE_EXCEPTION_NO_CLIENT_CONNECT = "没有客户端连接";
     public static final String BLUE_EXCEPTION_SERVER_CONNECT = "服务端已经连接";
+
+    public static final String SERVER_IP = "";
+    public static final int SERVER_PORT = 9980;
 }

@@ -4,7 +4,7 @@ import android.bluetooth.BluetoothSocket;
 
 public interface ServerAcceptListener {
 
-    public void connectSuccess(BluetoothSocket bluetoothSocket);
+    public void connectSuccess(Object object);
 
     public void connectFail(Exception e);
 }
