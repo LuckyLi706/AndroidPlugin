@@ -7,6 +7,16 @@ public class CommConfig {
     final int stopBits;   //停止位
     final int parity;     //校验位
     final String classicUUID; //经典蓝牙的UUID
+    final String serverIP;  //局域网通信的ip
+    final int serverPort;   //局域网通信的port
+
+    public String getServerIP() {
+        return serverIP;
+    }
+
+    public int getServerPort() {
+        return serverPort;
+    }
 
     public int getBaudRate() {
         return baudRate;
@@ -38,6 +48,8 @@ public class CommConfig {
         stopBits = builder.stopBits;
         parity = builder.parity;
         classicUUID = builder.classicUUID;
+        serverIP = builder.serverIP;
+        serverPort = builder.serverPort;
     }
 
     public static final class Builder {
@@ -47,6 +59,8 @@ public class CommConfig {
         int stopBits;   //停止位
         int parity;     //校验位
         String classicUUID;  //经典蓝牙的UUID
+        String serverIP;  //局域网通信的ip
+        int serverPort;   //局域网通信的port
 
         public Builder() {
             baudRate = 115200;
@@ -54,6 +68,8 @@ public class CommConfig {
             stopBits = 1;
             parity = 0;
             classicUUID = Constants.CLASSIC_BLUE_UUID;
+            serverIP = Constants.SERVER_IP;
+            serverPort = Constants.SERVER_PORT;
         }
 
         public Builder baudRate(int baudRate) {
@@ -78,6 +94,16 @@ public class CommConfig {
 
         public Builder classicUUID(String uuid) {
             this.classicUUID = uuid;
+            return this;
+        }
+
+        public Builder serverIP(String ip) {
+            this.serverIP = ip;
+            return this;
+        }
+
+        public Builder serverPort(int port) {
+            this.serverPort = port;
             return this;
         }
 

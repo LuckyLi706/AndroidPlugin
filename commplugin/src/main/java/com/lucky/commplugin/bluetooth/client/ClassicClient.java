@@ -6,12 +6,10 @@ import android.bluetooth.BluetoothSocket;
 
 import com.lucky.commplugin.Constants;
 import com.lucky.commplugin.bluetooth.BluetoothManager;
-import com.lucky.commplugin.listener.ClassBlueListener;
+import com.lucky.commplugin.listener.ReadListener;
 import com.lucky.commplugin.listener.ClientConnectListener;
 import com.lucky.commplugin.utils.HexDump;
-import com.lucky.commplugin.utils.LogUtil;
 
-import java.io.IOException;
 import java.io.InputStream;
 import java.io.OutputStream;
 import java.util.UUID;
@@ -51,7 +49,7 @@ public class ClassicClient extends BluetoothManager {
         public void run() {
             try {
                 if (bluetoothDevice == null) {
-                    ClientConnectListener.connectFail(new Exception(Constants.BLUE_EXCEPTION_CLIENT_IS_NULL));
+                    ClientConnectListener.connectFail(new Exception(Constants.EXCEPTION_CLIENT_IS_NULL));
                     return;
                 }
                 socket = bluetoothDevice.createRfcommSocketToServiceRecord(UUID.fromString(Constants.CLASSIC_BLUE_UUID));
@@ -98,11 +96,11 @@ public class ClassicClient extends BluetoothManager {
     private class ReadRunnable implements Runnable {
 
         private final InputStream inputStream;
-        private final ClassBlueListener classBlueListener;
+        private final ReadListener readListener;
 
-        public ReadRunnable(InputStream inputStream, ClassBlueListener classBlueListener) {
+        public ReadRunnable(InputStream inputStream, ReadListener readListener) {
             this.inputStream = inputStream;
-            this.classBlueListener = classBlueListener;
+            this.readListener = readListener;
         }
 
         private boolean isRunning = true;
@@ -123,9 +121,9 @@ public class ClassicClient extends BluetoothManager {
                     int len = inputStream.read(date);//此时数据读取到数组中
                     byte[] date1 = new byte[len];
                     System.arraycopy(date, 0, date1, 0, len);
-                    classBlueListener.readClassicData(date1);
+                    readListener.readData(date1);
                 } catch (Exception e) {
-                    classBlueListener.readClassicError(e);
+                    readListener.readError(e);
                     //断开连接取消接收数据线程
                     if (socket != null && !socket.isConnected()) {
                         isRunning = false;
@@ -145,7 +143,7 @@ public class ClassicClient extends BluetoothManager {
             }
             executorService.submit(connectRunnable);
         } else {
-            ClientConnectListener.connectFail(new Exception(Constants.BLUE_EXCEPTION_CLIENT_CONNECT));
+            ClientConnectListener.connectFail(new Exception(Constants.EXCEPTION_CLIENT_CONNECT));
         }
     }
 
@@ -157,13 +155,13 @@ public class ClassicClient extends BluetoothManager {
     }
 
     @Override
-    public void read(ClassBlueListener classBlueListener) {
+    public void read(ReadListener readListener) {
         if (socket != null && socket.isConnected() && outputStream != null) {
-            readRunnable = new ReadRunnable(inputStream, classBlueListener);
+            readRunnable = new ReadRunnable(inputStream, readListener);
             readRunnable.start();
             executorService.submit(readRunnable);
         } else {
-            classBlueListener.readClassicError(new Exception(Constants.BLUE_EXCEPTION_CLIENT_CONNECT_FAIL));
+            readListener.readError(new Exception(Constants.EXCEPTION_CLIENT_CONNECT_FAIL));
         }
     }
 
@@ -172,7 +170,7 @@ public class ClassicClient extends BluetoothManager {
         if (socket != null && socket.isConnected()) {
             outputStream.write(HexDump.hexStringToByteArray(data));
         } else {
-            throw new Exception(Constants.BLUE_EXCEPTION_CLIENT_CONNECT_FAIL);
+            throw new Exception(Constants.EXCEPTION_CLIENT_CONNECT_FAIL);
         }
     }
 
@@ -181,7 +179,7 @@ public class ClassicClient extends BluetoothManager {
         if (socket != null && socket.isConnected()) {
             outputStream.write(b);
         } else {
-            throw new Exception(Constants.BLUE_EXCEPTION_CLIENT_CONNECT_FAIL);
+            throw new Exception(Constants.EXCEPTION_CLIENT_CONNECT_FAIL);
         }
     }
 }

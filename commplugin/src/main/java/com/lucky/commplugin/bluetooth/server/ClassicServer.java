@@ -6,7 +6,7 @@ import android.bluetooth.BluetoothSocket;
 
 import com.lucky.commplugin.Constants;
 import com.lucky.commplugin.bluetooth.BluetoothManager;
-import com.lucky.commplugin.listener.ClassBlueListener;
+import com.lucky.commplugin.listener.ReadListener;
 import com.lucky.commplugin.listener.ServerAcceptListener;
 import com.lucky.commplugin.utils.HexDump;
 import com.lucky.commplugin.utils.LogUtil;
@@ -34,13 +34,13 @@ public class ClassicServer extends BluetoothManager {
     private BluetoothSocket bluetoothSocket;
 
     @Override
-    public void read(ClassBlueListener classBlueListener) {
+    public void read(ReadListener readListener) {
         if (bluetoothSocket == null || !bluetoothSocket.isConnected()) {
-            classBlueListener.readClassicError(new Exception(Constants.BLUE_EXCEPTION_NO_CLIENT_CONNECT));
+            readListener.readError(new Exception(Constants.EXCEPTION_NO_CLIENT_CONNECT));
             return;
         }
         if (readRunnable == null) {
-            readRunnable = new ReadRunnable(inputStream, classBlueListener);
+            readRunnable = new ReadRunnable(inputStream, readListener);
         }
         readRunnable.start();
         executorService.submit(readRunnable);
@@ -51,7 +51,7 @@ public class ClassicServer extends BluetoothManager {
         if (bluetoothSocket != null && bluetoothSocket.isConnected() && outputStream != null) {
             outputStream.write(HexDump.hexStringToByteArray(data));
         } else {
-            throw new Exception(Constants.BLUE_EXCEPTION_NO_CLIENT_CONNECT);
+            throw new Exception(Constants.EXCEPTION_NO_CLIENT_CONNECT);
         }
     }
 
@@ -60,7 +60,7 @@ public class ClassicServer extends BluetoothManager {
         if (bluetoothSocket != null && bluetoothSocket.isConnected() && outputStream != null) {
             outputStream.write(b);
         } else {
-            throw new Exception(Constants.BLUE_EXCEPTION_NO_CLIENT_CONNECT);
+            throw new Exception(Constants.EXCEPTION_NO_CLIENT_CONNECT);
         }
     }
 
@@ -72,7 +72,7 @@ public class ClassicServer extends BluetoothManager {
             }
             executorService.submit(acceptRunnable);
         } else {
-            serverAcceptListener.connectFail(new Exception(Constants.BLUE_EXCEPTION_SERVER_CONNECT));
+            serverAcceptListener.connectFail(new Exception(Constants.EXCEPTION_SERVER_CONNECT));
         }
     }
 
@@ -163,11 +163,11 @@ public class ClassicServer extends BluetoothManager {
     private class ReadRunnable implements Runnable {
 
         private final InputStream inputStream;
-        private final ClassBlueListener classBlueListener;
+        private final ReadListener readListener;
 
-        public ReadRunnable(InputStream inputStream, ClassBlueListener classBlueListener) {
+        public ReadRunnable(InputStream inputStream, ReadListener readListener) {
             this.inputStream = inputStream;
-            this.classBlueListener = classBlueListener;
+            this.readListener = readListener;
         }
 
         private boolean isRunning = true;
@@ -188,9 +188,9 @@ public class ClassicServer extends BluetoothManager {
                     int len = inputStream.read(date);//此时数据读取到数组中
                     byte[] date1 = new byte[len];
                     System.arraycopy(date, 0, date1, 0, len);
-                    classBlueListener.readClassicData(date1);
+                    readListener.readData(date1);
                 } catch (Exception e) {
-                    classBlueListener.readClassicError(e);
+                    readListener.readError(e);
                     if (bluetoothSocket != null && !bluetoothSocket.isConnected()) {
                         isRunning = false;
                     }

@@ -1,6 +1,5 @@
 package com.lucky.commplugin.bluetooth.client;
 
-import android.bluetooth.BluetoothDevice;
 import android.bluetooth.BluetoothGatt;
 import android.bluetooth.BluetoothGattCallback;
 import android.bluetooth.BluetoothGattCharacteristic;
@@ -12,7 +11,7 @@ import androidx.annotation.RequiresApi;
 
 import com.lucky.commplugin.bluetooth.BluetoothManager;
 import com.lucky.commplugin.listener.BleBlueToothListener;
-import com.lucky.commplugin.listener.ClassBlueListener;
+import com.lucky.commplugin.listener.ReadListener;
 
 import java.lang.reflect.Field;
 import java.util.List;
@@ -188,7 +187,7 @@ public class BleClient extends BluetoothManager {
     private BleBlueToothListener blueToothListener;
 
     @Override
-    public void read(ClassBlueListener classBlueListener) {
+    public void read(ReadListener readListener) {
 
     }
 

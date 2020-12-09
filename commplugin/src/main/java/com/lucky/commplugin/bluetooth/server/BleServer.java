@@ -12,7 +12,7 @@ import androidx.annotation.RequiresApi;
 
 import com.lucky.commplugin.bluetooth.BluetoothManager;
 import com.lucky.commplugin.listener.BleBlueToothListener;
-import com.lucky.commplugin.listener.ClassBlueListener;
+import com.lucky.commplugin.listener.ReadListener;
 import com.lucky.commplugin.listener.ServerAcceptListener;
 
 import java.lang.reflect.Field;
@@ -214,7 +214,7 @@ public class BleServer extends BluetoothManager {
     }
 
     @Override
-    public void read(ClassBlueListener classBlueListener) {
+    public void read(ReadListener readListener) {
 
     }
 

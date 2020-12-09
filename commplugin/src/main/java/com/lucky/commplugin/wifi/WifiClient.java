@@ -2,6 +2,7 @@ package com.lucky.commplugin.wifi;
 
 import com.lucky.commplugin.Constants;
 import com.lucky.commplugin.listener.ClientConnectListener;
+import com.lucky.commplugin.listener.ReadListener;
 
 import java.io.DataInputStream;
 import java.io.DataOutputStream;
@@ -10,13 +11,13 @@ import java.io.OutputStream;
 import java.net.Socket;
 import java.util.concurrent.ExecutorService;
 
-public class WifiClient {
+public class WifiClient extends WifiCommManager {
     private static final WifiClient wifiClient = new WifiClient();
     private Socket mSocket;
     private OutputStream outputStream;
     private InputStream inputStream;
-    private ExecutorService executorService;
-    private ConnectRunnable connectRunnable;
+    private boolean isRunning = true;
+
 
     public static WifiClient getInstance() {
         return wifiClient;
@@ -24,29 +25,42 @@ public class WifiClient {
 
     public void connect(ClientConnectListener clientConnectListener) {
         if (!mSocket.isConnected() || mSocket == null) {
-            connectRunnable = new ConnectRunnable(clientConnectListener);
+            ConnectRunnable connectRunnable = new ConnectRunnable(clientConnectListener);
             executorService.submit(connectRunnable);
         } else {
-            clientConnectListener.connectFail(new Exception("已经连接"));
+            clientConnectListener.connectFail(new Exception(Constants.EXCEPTION_CLIENT_CONNECT));
         }
     }
 
-    public void read() {
+    public void read(ReadListener readListener) {
         if (!mSocket.isConnected() || mSocket == null) {
-
+            readListener.readError(new Exception(Constants.EXCEPTION_CLIENT_CONNECT_FAIL));
         } else {
-            ReadRunnable readRunnable = new ReadRunnable();
+            ReadRunnable readRunnable = new ReadRunnable(readListener);
             executorService.submit(readRunnable);
         }
     }
 
     public void write(String message) throws Exception {
         if (!mSocket.isConnected() || mSocket == null) {
-            throw new Exception("未连接");
+            throw new Exception(Constants.EXCEPTION_CLIENT_CONNECT_FAIL);
         } else {
             DataOutputStream writer = new DataOutputStream(outputStream);
             writer.writeUTF(message); // 写一个UTF-8的信息
         }
+    }
+
+    @Override
+    public void close() throws Exception {
+        isRunning = false;
+        if (mSocket != null) {
+            mSocket.close();
+        }
+    }
+
+    @Override
+    public void release() {
+        executorService.shutdown();
     }
 
     private class ConnectRunnable implements Runnable {
@@ -73,21 +87,27 @@ public class WifiClient {
     }
 
     private class ReadRunnable implements Runnable {
+
+        private final ReadListener readListener;
+
+        public ReadRunnable(ReadListener readListener) {
+            this.readListener = readListener;
+        }
+
         @Override
         public void run() {
-            DataInputStream reader;
-            boolean isRunning = true;
-            try {
-                // 获取读取流
-                reader = new DataInputStream(inputStream);
-                while (isRunning) {
-                    System.out.println("*等待客户端输入*");
+            DataInputStream reader = new DataInputStream(inputStream);
+            while (isRunning) {
+                try {
                     // 读取数据
                     String msg = reader.readUTF();
-                    System.out.println("获取到客户端的信息：=" + msg);
+                    readListener.readData(msg.getBytes());
+                } catch (Exception e) {
+                    readListener.readError(e);
+                    if (mSocket == null || !mSocket.isConnected()) {
+                        isRunning = false;
+                    }
                 }
-            } catch (Exception e) {
-
             }
         }
     }

@@ -15,7 +15,7 @@ import androidx.annotation.RequiresApi;
 
 import com.lucky.commplugin.listener.ClientConnectListener;
 import com.lucky.commplugin.listener.BlueScanListener;
-import com.lucky.commplugin.listener.ClassBlueListener;
+import com.lucky.commplugin.listener.ReadListener;
 import com.lucky.commplugin.listener.ServerAcceptListener;
 import com.lucky.commplugin.utils.LogUtil;
 
@@ -42,7 +42,6 @@ public abstract class BluetoothManager {
     protected Context context;
     protected ExecutorService executorService = Executors.newFixedThreadPool(6);
     private BlueScanListener blueScanListener;
-    protected BlueConnectState blueConnectState = BlueConnectState.CONNECT_UNKNOWN;
 
 
     public void initBluetooth(Context context) {
@@ -184,7 +183,7 @@ public abstract class BluetoothManager {
     }
 
     //读取数据
-    public void read(ClassBlueListener classBlueListener) {
+    public void read(ReadListener readListener) {
 
     }
 

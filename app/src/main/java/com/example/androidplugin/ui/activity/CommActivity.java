@@ -20,7 +20,7 @@ import com.lucky.commplugin.bluetooth.BluetoothManager;
 import com.lucky.commplugin.bluetooth.client.ClassicClient;
 import com.lucky.commplugin.bluetooth.server.ClassicServer;
 import com.lucky.commplugin.listener.BlueScanListener;
-import com.lucky.commplugin.listener.ClassBlueListener;
+import com.lucky.commplugin.listener.ReadListener;
 import com.lucky.commplugin.listener.ClientConnectListener;
 import com.lucky.commplugin.listener.ServerAcceptListener;
 import com.lucky.commplugin.listener.UsbConnectListener;
@@ -106,14 +106,14 @@ public class CommActivity extends AppCompatActivity implements SerialInputOutput
                 @Override
                 public void connectSuccess() {
                     runOnUiThread(() -> Toast.makeText(CommActivity.this, "连接了", Toast.LENGTH_SHORT).show());
-                    ClassicClient.getInstance().read(new ClassBlueListener() {
+                    ClassicClient.getInstance().read(new ReadListener() {
                         @Override
-                        public void readClassicData(byte[] b) {
+                        public void readData(byte[] b) {
                             runOnUiThread(() -> Toast.makeText(CommActivity.this, new String(b), Toast.LENGTH_SHORT).show());
                         }
 
                         @Override
-                        public void readClassicError(Exception e) {
+                        public void readError(Exception e) {
                             runOnUiThread(() -> Toast.makeText(CommActivity.this, "读取异常:" + e.getMessage(), Toast.LENGTH_SHORT).show());
                         }
                     });
@@ -143,17 +143,17 @@ public class CommActivity extends AppCompatActivity implements SerialInputOutput
 
             ClassicServer.getInstance().accept(new ServerAcceptListener() {
                 @Override
-                public void connectSuccess(BluetoothSocket bluetoothSocket) {
-
+                public void connectSuccess(Object object) {
+                    BluetoothSocket bluetoothSocket = (BluetoothSocket) object;
                     runOnUiThread(() -> Toast.makeText(CommActivity.this, bluetoothSocket.getRemoteDevice().getAddress() + "连接了", Toast.LENGTH_SHORT).show());
-                    ClassicServer.getInstance().read(new ClassBlueListener() {
+                    ClassicServer.getInstance().read(new ReadListener() {
                         @Override
-                        public void readClassicData(byte[] b) {
+                        public void readData(byte[] b) {
                             runOnUiThread(() -> Toast.makeText(CommActivity.this, new String(b), Toast.LENGTH_SHORT).show());
                         }
 
                         @Override
-                        public void readClassicError(Exception e) {
+                        public void readError(Exception e) {
                             runOnUiThread(() -> Toast.makeText(CommActivity.this, "读取异常:" + e.getMessage(), Toast.LENGTH_SHORT).show());
                         }
                     });
