@@ -52,7 +52,7 @@ public class ClassicClient extends BluetoothManager {
                     ClientConnectListener.connectFail(new Exception(Constants.EXCEPTION_CLIENT_IS_NULL));
                     return;
                 }
-                socket = bluetoothDevice.createRfcommSocketToServiceRecord(UUID.fromString(Constants.CLASSIC_BLUE_UUID));
+                socket = bluetoothDevice.createRfcommSocketToServiceRecord(UUID.fromString(commConfig.getClassicUUID()));
                 if (socket != null) {
                     // 连接
                     if (!socket.isConnected()) {

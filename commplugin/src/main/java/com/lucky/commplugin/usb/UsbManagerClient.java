@@ -73,7 +73,7 @@ public class UsbManagerClient {
      * @param context    上下文对象
      * @param commConfig 配置信息
      */
-    public void init(Context context, CommConfig commConfig, UsbStateListener usbStateListener) {
+    public void initUsb(Context context, CommConfig commConfig, UsbStateListener usbStateListener) {
         this.context = context.getApplicationContext();
         this.commConfig = commConfig;
         this.usbStateListener = usbStateListener;

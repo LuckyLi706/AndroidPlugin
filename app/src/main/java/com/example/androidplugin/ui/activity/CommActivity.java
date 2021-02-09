@@ -24,6 +24,7 @@ import com.lucky.commplugin.listener.ReadListener;
 import com.lucky.commplugin.listener.ClientConnectListener;
 import com.lucky.commplugin.listener.ServerAcceptListener;
 import com.lucky.commplugin.listener.UsbConnectListener;
+import com.lucky.commplugin.listener.UsbStateListener;
 import com.lucky.commplugin.usb.UsbManagerClient;
 import com.lucky.commplugin.usb.usbserial.driver.UsbSerialDriver;
 import com.lucky.commplugin.usb.usbserial.util.SerialInputOutputManager;
@@ -45,7 +46,17 @@ public class CommActivity extends AppCompatActivity implements SerialInputOutput
         et_data = findViewById(R.id.et_data);
         findViewById(R.id.btn_connect_usb).setOnClickListener((v -> {
             CommConfig commConfig = new CommConfig.Builder().builder();
-            UsbManagerClient.getInstance().init(this, commConfig, null);
+            UsbManagerClient.getInstance().initUsb(this, commConfig, new UsbStateListener() {
+                @Override
+                public void attach() {
+
+                }
+
+                @Override
+                public void detach() {
+
+                }
+            });
             List<UsbSerialDriver> connectDevice = UsbManagerClient.getInstance().getConnectDevice();
             if (connectDevice.size() > 0) {
                 UsbManagerClient.getInstance().openUsbConnection(connectDevice.get(0), new UsbConnectListener() {
@@ -68,18 +79,19 @@ public class CommActivity extends AppCompatActivity implements SerialInputOutput
         }));
 
         findViewById(R.id.btn_start_scan_bluetooth).setOnClickListener((v -> {
-            BluetoothManager bluetoothManager = ClassicClient.getInstance();
-            bluetoothManager.initBluetooth(this);
+            CommConfig commConfig = new CommConfig.Builder().builder();
+            //BluetoothManager bluetoothManager = ClassicClient.getInstance();
+            ClassicClient.getInstance().initBluetooth(this, commConfig);
 
-            BluetoothManager bluetoothManager1 = ClassicServer.getInstance();
-            bluetoothManager1.initBluetooth(this);
-            bluetoothManager.startScan_1(new BlueScanListener() {
+            //BluetoothManager bluetoothManager1 = ClassicServer.getInstance();
+            ClassicServer.getInstance().initBluetooth(this, commConfig);
+            ClassicClient.getInstance().startScan_1(new BlueScanListener() {
                 @Override
                 public void onScanResult(BluetoothDevice bluetoothDevice) {
                     LogUtil.d(bluetoothDevice.getName() + "," + bluetoothDevice.getAddress());
                     if (bluetoothDevice.getAddress().equals("AC:37:43:76:8D:34")) {
                         CommActivity.this.bluetoothDevice = bluetoothDevice;
-                        bluetoothManager.stopScan_1();
+                        ClassicClient.getInstance().stopScan_1();
 
                         Toast.makeText(CommActivity.this, "扫描成功", Toast.LENGTH_SHORT).show();
                     }
@@ -88,8 +100,8 @@ public class CommActivity extends AppCompatActivity implements SerialInputOutput
         }));
 
         findViewById(R.id.btn_scaned_bluetooth).setOnClickListener(v -> {
-            BluetoothManager bluetoothManager = ClassicClient.getInstance();
-            bluetoothManager.enableDiscovery();
+           // BluetoothManager bluetoothManager = ClassicClient.getInstance();
+            ClassicClient.getInstance().enableDiscovery();
         });
 
         findViewById(R.id.btn_stop_scan_bluetooth).setOnClickListener((v -> {
@@ -203,6 +215,11 @@ public class CommActivity extends AppCompatActivity implements SerialInputOutput
     @Override
     public void onRunError(Exception e) {
 
+    }
+
+    @Override
+    protected void onDestroy() {
+        UsbManagerClient.getInstance().releaseUsb();
     }
 
     //权限申请结果

@@ -13,6 +13,7 @@ import android.os.Build;
 
 import androidx.annotation.RequiresApi;
 
+import com.lucky.commplugin.CommConfig;
 import com.lucky.commplugin.listener.ClientConnectListener;
 import com.lucky.commplugin.listener.BlueScanListener;
 import com.lucky.commplugin.listener.ReadListener;
@@ -42,9 +43,10 @@ public abstract class BluetoothManager {
     protected Context context;
     protected ExecutorService executorService = Executors.newFixedThreadPool(6);
     private BlueScanListener blueScanListener;
+    protected CommConfig commConfig;
 
 
-    public void initBluetooth(Context context) {
+    public void initBluetooth(Context context, CommConfig commConfig) {
         this.context = context.getApplicationContext();
         if (bluetoothAdapter == null) {
             bluetoothAdapter = BluetoothAdapter.getDefaultAdapter();
@@ -55,6 +57,7 @@ public abstract class BluetoothManager {
         if (!bluetoothAdapter.isEnabled()) {
             bluetoothAdapter.enable();
         }
+        this.commConfig = commConfig;
         registerReceiver();
     }
 
