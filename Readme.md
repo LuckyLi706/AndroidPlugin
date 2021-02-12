@@ -29,6 +29,12 @@ boolean multipleApp = DangerProtector.isMultipleApp(this);  //检测多开
 ```
 ## 硬件通信库
 
+引入方式
+
+```java
+implementation 'com.lucky.commplugin:commplugin:1.0.0'
+```
+
 初始化配置（必须）
 
 ```java
@@ -49,6 +55,18 @@ int serverPort;   //局域网通信的port
 ```java
 //过滤信息lucky
 LogUtil.setDebug(false);  //关闭日志 (默认开启)
+```
+
+权限
+
+```java
+//蓝牙权限，6.0需要动态申请
+<uses-permission android:name="android.permission.BLUETOOTH" />
+<uses-permission android:name="android.permission.BLUETOOTH_ADMIN" />
+  
+//网络权限，6.0以后需要动态申请
+<uses-permission android:name="android.permission.ACCESS_FINE_LOCATION" />
+<uses-permission android:name="android.permission.ACCESS_COARSE_LOCATION" />  
 ```
 
 ### USB通信
@@ -172,7 +190,7 @@ LogUtil.setDebug(false);  //关闭日志 (默认开启)
 
 1. 初始化配置（见上）
 
-2. 蓝牙扫描
+2. 蓝牙扫描（作为客户端需要做扫描操作）
 
    ```java
    /**
@@ -208,10 +226,134 @@ LogUtil.setDebug(false);  //关闭日志 (默认开启)
                }); 
    ```
 
-   
+3. 使蓝牙可以被扫描到（作为服务端要能够被扫描到【非必须】）
+
+   ```java
+   ClassicServer.getInstance().enableDiscovery();
+   ```
 
 #### 经典蓝牙
 
++ 客户端
 
+  1. 连接
 
+     ```java
+     ClassicClient.getInstance().connect(bluetoothDevice, new ClientConnectListener() {
+                     @Override
+                     public void connectSuccess() {
+                         runOnUiThread(() -> Toast.makeText(CommActivity.this, "连接了", Toast.LENGTH_SHORT).show());
+                         ClassicClient.getInstance().read(new ReadListener() {
+                             @Override
+                             public void readData(byte[] b) {
+                                 runOnUiThread(() -> Toast.makeText(CommActivity.this, new String(b), Toast.LENGTH_SHORT).show());
+                             }
+     
+                             @Override
+                             public void readError(Exception e) {
+                                 runOnUiThread(() -> Toast.makeText(CommActivity.this, "读取异常:" + e.getMessage(), Toast.LENGTH_SHORT).show());
+                             }
+                         });
+                     }
+     
+                     @Override
+                     public void connectFail(Exception e) {
+                         runOnUiThread(() -> Toast.makeText(CommActivity.this, "连接异常" + e.getMessage(), Toast.LENGTH_SHORT).show());
+                     }
+                 });
+     ```
+
+  2. 写数据
+
+     ```java
+     ClassicClient.getInstance().write(String data) throws Exception  //写十六进制字符串
+     ClassicClient.getInstance().write(byte[] data) throws Exception  //写字节数组
+     ```
+
+  3. 读取数据（放在蓝牙连接成功后）
+
+     ```java
+     ClassicClient.getInstance().read(new ReadListener() {
+                             @Override
+                             public void readData(byte[] b) {
+                                 runOnUiThread(() -> Toast.makeText(CommActivity.this, new String(b), Toast.LENGTH_SHORT).show());
+                             }
+     
+                             @Override
+                             public void readError(Exception e) {
+                                 runOnUiThread(() -> Toast.makeText(CommActivity.this, "读取异常:" + e.getMessage(), Toast.LENGTH_SHORT).show());
+                             }
+                         });
+     ```
+
+  4. 关闭蓝牙
+
+     ```java
+     ClassicClient.getInstance().close();
+     ```
+
+  5. 释放资源
+
+     ```java
+     ClassicClient.getInstance().release();
+     ```
+
++ 服务端
+
+  1. 等待连接
+
+     ```java
+     ClassicServer.getInstance().accept(new ServerAcceptListener() {
+                     @Override
+                     public void connectSuccess(Object object) {
+                         BluetoothSocket bluetoothSocket = (BluetoothSocket) object;  //获取到客户端的蓝牙对象
+                         
+                     }
+     
+                     @Override
+                     public void connectFail(Exception e) {
+                         runOnUiThread(() -> Toast.makeText(CommActivity.this, "连接异常" + e.getMessage(), Toast.LENGTH_SHORT).show());
+     
+                     }
+                 });
+     ```
+
+  2. 写入数据
+
+     ```java
+     ClassicServer.getInstance().write(String data) throws Exception  //写十六进制字符串
+     ClassicServer.getInstance().write(byte[] data) throws Exception  //写字节数组
+     ```
+
+  3. 读取数据（放在连接成功之后）
+
+     ```java
+     ClassicServer.getInstance().read(new ReadListener() {
+                             @Override
+                             public void readData(byte[] b) {
+                                 runOnUiThread(() -> Toast.makeText(CommActivity.this, new String(b), Toast.LENGTH_SHORT).show());
+                             }
+     
+                             @Override
+                             public void readError(Exception e) {
+                                 runOnUiThread(() -> Toast.makeText(CommActivity.this, "读取异常:" + e.getMessage(), Toast.LENGTH_SHORT).show());
+                             }
+                         });
+     ```
+
+  4. 关闭连接
+
+     ```java
+     ClassicServer.getInstance().close();
+     ```
+
+  5. 释放资源
+
+     ```java
+     ClassicServer.getInstance().release();
+     ```
+
+#### 低功耗蓝牙（待补充）
+
+## 局域网通信（暂略）
 

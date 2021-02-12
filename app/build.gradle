@@ -36,5 +36,6 @@ dependencies {
     implementation project(path: ':cacheplugin')
     implementation project(path: ':cameraplugin')
     implementation project(path: ':intentplugin')
-    implementation project(path: ':commplugin')
+
+    implementation 'com.lucky.commplugin:commplugin:1.0.0'
 }

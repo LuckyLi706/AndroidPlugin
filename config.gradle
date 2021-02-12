@@ -1,6 +1,6 @@
 ext {
     bintray = [
-            user = "",   //用户名
-            key = ""     //key
+            user = "jackyli706",   //用户名
+            key = "15d758fcfe814adb01e4d91125d8cf13170a566c"     //key
     ]
 }
