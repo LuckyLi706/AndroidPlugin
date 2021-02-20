@@ -2,238 +2,45 @@ package com.lucky.commplugin.bluetooth.server;
 
 import android.bluetooth.BluetoothDevice;
 import android.bluetooth.BluetoothGatt;
-import android.bluetooth.BluetoothGattCallback;
 import android.bluetooth.BluetoothGattCharacteristic;
 import android.bluetooth.BluetoothGattDescriptor;
+import android.bluetooth.BluetoothGattServer;
+import android.bluetooth.BluetoothGattServerCallback;
 import android.bluetooth.BluetoothGattService;
+import android.bluetooth.le.AdvertiseCallback;
+import android.bluetooth.le.AdvertiseData;
+import android.bluetooth.le.AdvertiseSettings;
+import android.bluetooth.le.BluetoothLeAdvertiser;
+import android.content.Context;
 import android.os.Build;
+import android.os.ParcelUuid;
+import android.os.SystemClock;
 
 import androidx.annotation.RequiresApi;
 
+import com.lucky.commplugin.CommConfig;
 import com.lucky.commplugin.bluetooth.BluetoothManager;
-import com.lucky.commplugin.listener.BleBlueToothListener;
-import com.lucky.commplugin.listener.ReadListener;
-import com.lucky.commplugin.listener.ServerAcceptListener;
+import com.lucky.commplugin.utils.LogUtil;
 
-import java.lang.reflect.Field;
-import java.util.List;
+import java.util.Arrays;
 import java.util.UUID;
-
-import static com.lucky.commplugin.utils.HexDump.hexStringToByteArray;
 
 public class BleServer extends BluetoothManager {
 
-    /**
-     * Ble蓝牙连接方式
-     */
-    private BluetoothGatt bluetoothGatt;
-    private BluetoothGattService bluetoothGattService;
-    private BluetoothGattCharacteristic writeCharacteristic;
-    private BluetoothGattCharacteristic notifyCharacteristic;
-
-    private UUID SERVICE_UUID;    //主服务的UUID
-    private UUID RX_UUID;         //写的UUID
-    private UUID NOTIFY_UUID;     //读的UUID
-
-    private String currentBleDevice;   //当前的蓝牙设备
-
-
-    @RequiresApi(api = Build.VERSION_CODES.JELLY_BEAN_MR2)
-    private void connectBle(BluetoothDevice bluetoothDevice) {
-        closeBleBlue();
-        bluetoothGatt = bluetoothDevice.connectGatt(context, false, callback);
-    }
-
-    @RequiresApi(api = Build.VERSION_CODES.JELLY_BEAN_MR2)
-    public void closeBleBlue() {
-        if (bluetoothGatt != null) {
-            bluetoothGatt.disconnect();
-            bluetoothGatt.close();
-            bluetoothGatt = null;
-            writeCharacteristic = null;
-            notifyCharacteristic = null;
-        }
-    }
-
-
-    private static long HONEY_CMD_TIMEOUT = 500;
-
-    @RequiresApi(api = Build.VERSION_CODES.KITKAT)
-    private boolean isDeviceBusy() {
-        boolean state = false;
-        try {
-            state = (boolean) readField(bluetoothGatt, "mDeviceBusy");
-        } catch (IllegalAccessException | NoSuchFieldException e) {
-            e.printStackTrace();
-        }
-        return state;
-    }
-
-
-    private Object readField(Object object, String name) throws IllegalAccessException, NoSuchFieldException {
-        Field field = object.getClass().getDeclaredField(name);
-        field.setAccessible(true);
-        return field.get(object);
-    }
-
-    @RequiresApi(api = Build.VERSION_CODES.JELLY_BEAN_MR2)
-    private void writeCharacteristic(byte[] value) {
-        if (bluetoothGatt == null) {
-            return;
-        }
-        if (!writeBleDataCheck()) {
-            return;
-        }
-        try {
-            writeCharacteristic.setValue(value);
-            boolean status = bluetoothGatt.writeCharacteristic(writeCharacteristic);
-        } catch (Exception e) {
-            e.printStackTrace();
-        }
-    }
-
-    @RequiresApi(api = Build.VERSION_CODES.KITKAT)
-    private boolean writeBleDataCheck() {
-        long enterTime = System.currentTimeMillis();
-        while ((System.currentTimeMillis() - enterTime) < HONEY_CMD_TIMEOUT) {
-            if (isDeviceBusy()) {
-                try {
-                    Thread.sleep(10);
-                } catch (InterruptedException e) {
-                    e.printStackTrace();
-                }
-            } else {
-                return true;
-            }
-        }
-        if ((System.currentTimeMillis() - enterTime) >= HONEY_CMD_TIMEOUT) {
-        }
-        return false;
-    }
-
-    private boolean callBackDiscovered = false;
-    private long connectTime;
-
-    private BluetoothGattCallback callback = new BluetoothGattCallback() {
-        /**
-         * 133 ：连接超时或未找到设备.
-         * 8 ： 设备超出范围
-         * 22 ：表示本地设备终止了连接
-         * @param gatt
-         * @param status    用于返回操作是否成功,会返回异常码
-         * @param newState  返回连接状态，如BluetoothProfile#STATE_DISCONNECTED、BluetoothProfile#STATE_CONNECTED
-         */
-        @RequiresApi(api = Build.VERSION_CODES.JELLY_BEAN_MR2)
-        @Override
-        public void onConnectionStateChange(BluetoothGatt gatt, int status,
-                                            int newState) {
-
-
-            if (status != BluetoothGatt.GATT_SUCCESS) {
-
-            } else {
-                if (newState == BluetoothGatt.STATE_CONNECTED) {
-                    connectTime = System.currentTimeMillis();
-                    callBackDiscovered = false;
-                    //count = 0;
-                    // 开始扫描服务，安卓蓝牙开发重要步骤之一
-
-                    gatt.discoverServices();
-                    //startDiscoverThread();
-                } else if (newState == BluetoothGatt.STATE_DISCONNECTED) {
-                    // 连接断开
-                    /*连接断开后的相应处理*/
-                    //blueToothListener.connect(false);
-                    // bluetoothGatt = null;
-                    bluetoothGatt.close();
-                }
-            }
-        }
-
-        //写的通知
-        @Override
-        public void onCharacteristicWrite(BluetoothGatt gatt,
-                                          BluetoothGattCharacteristic characteristic, int status) {
-            super.onCharacteristicWrite(gatt, characteristic, status);
-        }
-
-        @Override
-        public void onDescriptorWrite(BluetoothGatt gatt,
-                                      BluetoothGattDescriptor descriptor, int status) {
-        }
-
-        @RequiresApi(api = Build.VERSION_CODES.JELLY_BEAN_MR2)
-        @Override
-        public void onServicesDiscovered(BluetoothGatt gatt, int status) {
-            try {
-                Thread.sleep(30);
-            } catch (InterruptedException e) {
-                e.printStackTrace();
-            }
-
-            if (callBackDiscovered) {
-                return;
-            }
-            callBackDiscovered = true;
-            //获取服务列表
-            if (status == BluetoothGatt.GATT_SUCCESS) {
-                //设置serviceUUID,原型是：BluetoothGattService bluetoothGattService = bluetoothGatt.getService(UUID.fromString(SERVICESUUID));
-                bluetoothGattService = bluetoothGatt.getService(SERVICE_UUID);
-                //设置写入特征UUID,原型是：BluetoothGattCharacteristic writeCharacteristic = bluetoothGattService.getCharacteristic(UUID.fromString(WRITEUUID));
-                writeCharacteristic = bluetoothGattService.getCharacteristic(RX_UUID);
-                //设置监听特征UUID,原型是：BluetoothGattCharacteristic notifyCharacteristic = bluetoothGattService.getCharacteristic(UUID.fromString(NOTIFYUUID));
-                notifyCharacteristic = bluetoothGattService.getCharacteristic(NOTIFY_UUID);
-                //开启监听
-                boolean result = gatt.setCharacteristicNotification(notifyCharacteristic, true);
-                if (result) {
-                    List<BluetoothGattDescriptor> descriptorList = notifyCharacteristic.getDescriptors();
-                    if (descriptorList != null && descriptorList.size() > 0) {
-                        for (BluetoothGattDescriptor descriptor : descriptorList) {
-                            descriptor.setValue(BluetoothGattDescriptor.ENABLE_NOTIFICATION_VALUE);
-                            bluetoothGatt.writeDescriptor(descriptor);
-                        }
-                    }
-                }
-            } else {
-            }
-        }
-
-        //数据返回的回调（此处接收BLE设备返回数据）
-        @Override
-        public void onCharacteristicChanged(BluetoothGatt gatt,
-                                            BluetoothGattCharacteristic characteristic) {
-            super.onCharacteristicChanged(gatt, characteristic);
-            blueToothListener.readBleData(characteristic.getValue());
-        }
-    };
-
-    private BleBlueToothListener blueToothListener;
-
-    public void setBleListener(BleBlueToothListener blueToothListener) {
-        this.blueToothListener = blueToothListener;
-    }
+    public static final UUID UUID_SERVICE = UUID.fromString("10000000-0000-0000-0000-000000000000"); //自定义UUID
+    public static final UUID UUID_CHAR_READ_NOTIFY = UUID.fromString("11000000-0000-0000-0000-000000000000");
+    public static final UUID UUID_DESC_NOTITY = UUID.fromString("11100000-0000-0000-0000-000000000000");
+    public static final UUID UUID_CHAR_WRITE = UUID.fromString("12000000-0000-0000-0000-000000000000");
+    private BluetoothLeAdvertiser mBluetoothLeAdvertiser; // BLE广播
+    private BluetoothGattServer mBluetoothGattServer; // BLE服务端
 
     @Override
-    public void read(ReadListener readListener) {
+    public void write(String data) throws Exception {
 
     }
 
     @Override
-    public void write(String data) {
-        if (writeCharacteristic != null) {
-            byte[] b = hexStringToByteArray(data);
-            writeCharacteristic(b);
-        } else {
-        }
-    }
-
-    @Override
-    public void write(byte[] b) {
-
-    }
-
-    @Override
-    public void accept(ServerAcceptListener serverAcceptListener) {
+    public void write(byte[] b) throws Exception {
 
     }
 
@@ -241,4 +48,140 @@ public class BleServer extends BluetoothManager {
     public void close() {
 
     }
+
+    @RequiresApi(api = Build.VERSION_CODES.LOLLIPOP)
+    @Override
+    public void initBluetooth(Context context, CommConfig commConfig) {
+        super.initBluetooth(context, commConfig);
+
+        // ============启动BLE蓝牙广播(广告) =================================================================================
+        //广播设置(必须)
+        AdvertiseSettings settings = new AdvertiseSettings.Builder()
+                .setAdvertiseMode(AdvertiseSettings.ADVERTISE_MODE_LOW_LATENCY) //广播模式: 低功耗,平衡,低延迟
+                .setTxPowerLevel(AdvertiseSettings.ADVERTISE_TX_POWER_HIGH) //发射功率级别: 极低,低,中,高
+                .setConnectable(true) //能否连接,广播分为可连接广播和不可连接广播
+                .build();
+        //广播数据(必须，广播启动就会发送)
+        AdvertiseData advertiseData = new AdvertiseData.Builder()
+                .setIncludeDeviceName(true) //包含蓝牙名称
+                .setIncludeTxPowerLevel(true) //包含发射功率级别
+                .addManufacturerData(1, new byte[]{23, 33}) //设备厂商数据，自定义
+                .build();
+        //扫描响应数据(可选，当客户端扫描时才发送)
+        AdvertiseData scanResponse = new AdvertiseData.Builder()
+                .addManufacturerData(2, new byte[]{66, 66}) //设备厂商数据，自定义
+                .addServiceUuid(new ParcelUuid(UUID_SERVICE)) //服务UUID
+                //      .addServiceData(new ParcelUuid(UUID_SERVICE), new byte[]{2}) //服务数据，自定义
+                .build();
+        mBluetoothLeAdvertiser = bluetoothAdapter.getBluetoothLeAdvertiser();
+        mBluetoothLeAdvertiser.startAdvertising(settings, advertiseData, scanResponse, advertiseCallback);
+
+        // 注意：必须要开启可连接的BLE广播，其它设备才能发现并连接BLE服务端!
+        // =============启动BLE蓝牙服务端=====================================================================================
+        BluetoothGattService service = new BluetoothGattService(UUID_SERVICE, BluetoothGattService.SERVICE_TYPE_PRIMARY);
+        //添加可读+通知characteristic
+        BluetoothGattCharacteristic characteristicRead = new BluetoothGattCharacteristic(UUID_CHAR_READ_NOTIFY,
+                BluetoothGattCharacteristic.PROPERTY_READ | BluetoothGattCharacteristic.PROPERTY_NOTIFY, BluetoothGattCharacteristic.PERMISSION_READ);
+        characteristicRead.addDescriptor(new BluetoothGattDescriptor(UUID_DESC_NOTITY, BluetoothGattCharacteristic.PERMISSION_WRITE));
+        service.addCharacteristic(characteristicRead);
+        //添加可写characteristic
+        BluetoothGattCharacteristic characteristicWrite = new BluetoothGattCharacteristic(UUID_CHAR_WRITE,
+                BluetoothGattCharacteristic.PROPERTY_WRITE, BluetoothGattCharacteristic.PERMISSION_WRITE);
+        service.addCharacteristic(characteristicWrite);
+        if (bluetoothAdapter != null)
+            mBluetoothGattServer = bluetoothManager.openGattServer(context, mBluetoothGattServerCallback);
+        mBluetoothGattServer.addService(service);
+    }
+
+    private final AdvertiseCallback advertiseCallback = new AdvertiseCallback() {
+        @Override
+        public void onStartSuccess(AdvertiseSettings settingsInEffect) {
+            super.onStartSuccess(settingsInEffect);
+            LogUtil.d("advertiseCallback onStartSuccess");
+        }
+
+        @Override
+        public void onStartFailure(int errorCode) {
+            super.onStartFailure(errorCode);
+            LogUtil.d("advertiseCallback onStartFailure " + errorCode);
+        }
+    };
+
+    // BLE服务端Callback
+    private final BluetoothGattServerCallback mBluetoothGattServerCallback = new BluetoothGattServerCallback() {
+        @Override
+        public void onConnectionStateChange(BluetoothDevice device, int status, int newState) {
+            LogUtil.d(String.format("onConnectionStateChange:%s,%s,%s,%s", device.getName(), device.getAddress(), status, newState));
+        }
+
+        @Override
+        public void onServiceAdded(int status, BluetoothGattService service) {
+            LogUtil.d(String.format("onServiceAdded:%s,%s", status, service.getUuid()));
+        }
+
+        @Override
+        public void onCharacteristicReadRequest(BluetoothDevice device, int requestId, int offset, BluetoothGattCharacteristic characteristic) {
+            LogUtil.d(String.format("onCharacteristicReadRequest:%s,%s,%s,%s,%s", device.getName(), device.getAddress(), requestId, offset, characteristic.getUuid()));
+            String response = "CHAR_" + (int) (Math.random() * 100); //模拟数据
+            mBluetoothGattServer.sendResponse(device, requestId, BluetoothGatt.GATT_SUCCESS, offset, response.getBytes());// 响应客户端
+        }
+
+        @Override
+        public void onCharacteristicWriteRequest(BluetoothDevice device, int requestId, BluetoothGattCharacteristic characteristic, boolean preparedWrite, boolean responseNeeded, int offset, byte[] requestBytes) {
+            // 获取客户端发过来的数据
+            String requestStr = new String(requestBytes);
+            LogUtil.d(String.format("onCharacteristicWriteRequest:%s,%s,%s,%s,%s,%s,%s,%s", device.getName(), device.getAddress(), requestId, characteristic.getUuid(),
+                    preparedWrite, responseNeeded, offset, requestStr));
+            mBluetoothGattServer.sendResponse(device, requestId, BluetoothGatt.GATT_SUCCESS, offset, requestBytes);// 响应客户端
+        }
+
+        @Override
+        public void onDescriptorReadRequest(BluetoothDevice device, int requestId, int offset, BluetoothGattDescriptor descriptor) {
+            LogUtil.d(String.format("onDescriptorReadRequest:%s,%s,%s,%s,%s", device.getName(), device.getAddress(), requestId, offset, descriptor.getUuid()));
+            String response = "DESC_" + (int) (Math.random() * 100); //模拟数据
+            mBluetoothGattServer.sendResponse(device, requestId, BluetoothGatt.GATT_SUCCESS, offset, response.getBytes()); // 响应客户端
+        }
+
+        @Override
+        public void onDescriptorWriteRequest(final BluetoothDevice device, int requestId, BluetoothGattDescriptor descriptor, boolean preparedWrite, boolean responseNeeded, int offset, byte[] value) {
+            // 获取客户端发过来的数据
+            String valueStr = Arrays.toString(value);
+            LogUtil.d(String.format("onDescriptorWriteRequest:%s,%s,%s,%s,%s,%s,%s,%s", device.getName(), device.getAddress(), requestId, descriptor.getUuid(),
+                    preparedWrite, responseNeeded, offset, valueStr));
+            mBluetoothGattServer.sendResponse(device, requestId, BluetoothGatt.GATT_SUCCESS, offset, value);// 响应客户端
+            LogUtil.d("客户端写入Descriptor[" + descriptor.getUuid() + "]:\n" + valueStr);
+
+            // 简单模拟通知客户端Characteristic变化
+            if (Arrays.toString(BluetoothGattDescriptor.ENABLE_NOTIFICATION_VALUE).equals(valueStr)) { //是否开启通知
+                final BluetoothGattCharacteristic characteristic = descriptor.getCharacteristic();
+                new Thread(new Runnable() {
+                    @Override
+                    public void run() {
+                        for (int i = 0; i < 5; i++) {
+                            SystemClock.sleep(3000);
+                            String response = "CHAR_" + (int) (Math.random() * 100); //模拟数据
+                            characteristic.setValue(response);
+                            mBluetoothGattServer.notifyCharacteristicChanged(device, characteristic, false);
+                            LogUtil.d("通知客户端改变Characteristic[" + characteristic.getUuid() + "]:\n" + response);
+                        }
+                    }
+                }).start();
+            }
+        }
+
+        @Override
+        public void onExecuteWrite(BluetoothDevice device, int requestId, boolean execute) {
+            LogUtil.d(String.format("onExecuteWrite:%s,%s,%s,%s", device.getName(), device.getAddress(), requestId, execute));
+        }
+
+        @Override
+        public void onNotificationSent(BluetoothDevice device, int status) {
+            LogUtil.d(String.format("onNotificationSent:%s,%s,%s", device.getName(), device.getAddress(), status));
+        }
+
+        @Override
+        public void onMtuChanged(BluetoothDevice device, int mtu) {
+            LogUtil.d(String.format("onMtuChanged:%s,%s,%s", device.getName(), device.getAddress(), mtu));
+        }
+    };
 }

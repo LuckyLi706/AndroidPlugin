@@ -63,6 +63,15 @@ LogUtil.setDebug(false);  //关闭日志 (默认开启)
 //蓝牙权限，6.0需要动态申请
 <uses-permission android:name="android.permission.BLUETOOTH" />
 <uses-permission android:name="android.permission.BLUETOOTH_ADMIN" />
+<!-- If your app targets Android 9 or lower, you can declare
+     ACCESS_COARSE_LOCATION instead. -->
+<uses-permission android:name="android.permission.ACCESS_FINE_LOCATION" />
+
+<!-- true 表示手机必须支持BLE，否则无法安装！
+	这里设为false, 运行后在Activity中检查-->
+<uses-feature
+    android:name="android.hardware.bluetooth_le"
+    android:required="false" />
   
 //网络权限，6.0以后需要动态申请
 <uses-permission android:name="android.permission.ACCESS_FINE_LOCATION" />

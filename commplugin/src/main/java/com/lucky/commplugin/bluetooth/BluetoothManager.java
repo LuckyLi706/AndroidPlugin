@@ -9,6 +9,7 @@ import android.content.BroadcastReceiver;
 import android.content.Context;
 import android.content.Intent;
 import android.content.IntentFilter;
+import android.content.pm.PackageManager;
 import android.os.Build;
 
 import androidx.annotation.RequiresApi;
@@ -34,6 +35,37 @@ import java.util.concurrent.Executors;
  * </code>
  * <p>
  * 官方地址：https://developer.android.com/guide/topics/connectivity/bluetooth
+ * <p>
+ * <p>
+ * 从Android 4.3(API 18)才支持低功耗蓝牙(Bluetooth Low Energy, BLE)的核心功能,
+ * BLE蓝牙协议是GATT协议, BLE相关类不多, 全都位于android.bluetooth包和android.bluetooth.le包的几个类:
+ * android.bluetooth.
+ * .BluetoothGattService  包含多个Characteristic(属性特征值), 含有唯一的UUID作为标识
+ * .BluetoothGattCharacteristic  包含单个值和多个Descriptor, 含有唯一的UUID作为标识
+ * .BluetoothGattDescriptor  对Characteristic进行描述, 含有唯一的UUID作为标识
+ * <p>
+ * .BluetoothGatt   客户端相关
+ * .BluetoothGattCallback  客户端连接回调
+ * .BluetoothGattServer  服务端相关
+ * .BluetoothGattServerCallback 服务端连接回调
+ * <p>
+ * android.bluetooth.le.
+ * .AdvertiseCallback  服务端的广播回调
+ * .AdvertiseData  服务端的广播数据
+ * .AdvertiseSettings 服务端的广播设置
+ * .BluetoothLeAdvertiser 服务端的广播
+ * <p>
+ * .BluetoothLeScanner  客户端扫描相关(Android5.0新增)
+ * .ScanCallback  客户端扫描回调
+ * .ScanFilter 客户端扫描过滤
+ * .ScanRecord 客户端扫描结果的广播数据
+ * .ScanResult 客户端扫描结果
+ * .ScanSettings 客户端扫描设置
+ * <p>
+ * BLE设备分为两种设备: 客户端(也叫主机/中心设备/Central), 服务端(也叫从机/外围设备/peripheral)
+ * 客户端的核心类是 BluetoothGatt
+ * 服务端的核心类是 BluetoothGattServer 和 BluetoothLeAdvertiser
+ * BLE数据的核心类是 BluetoothGattCharacteristic 和 BluetoothGattDescriptor
  */
 public abstract class BluetoothManager {
 
@@ -41,21 +73,19 @@ public abstract class BluetoothManager {
     private BluetoothDiscoveryReceiver bluetoothDiscoveryReceiver;
     protected BluetoothAdapter bluetoothAdapter;
     protected Context context;
+    protected android.bluetooth.BluetoothManager bluetoothManager;
     protected ExecutorService executorService = Executors.newFixedThreadPool(6);
     private BlueScanListener blueScanListener;
     protected CommConfig commConfig;
 
 
-    public void initBluetooth(Context context, CommConfig commConfig) {
+    public void initBluetooth(Context context, CommConfig commConfig) throws Exception {
         this.context = context.getApplicationContext();
-        if (bluetoothAdapter == null) {
-            bluetoothAdapter = BluetoothAdapter.getDefaultAdapter();
+        if (bluetoothManager == null) {
+            bluetoothManager = (android.bluetooth.BluetoothManager) context.getSystemService(Context.BLUETOOTH_SERVICE);
         }
         if (bluetoothAdapter == null) {
-            return;
-        }
-        if (!bluetoothAdapter.isEnabled()) {
-            bluetoothAdapter.enable();
+            bluetoothAdapter = bluetoothManager.getAdapter();
         }
         this.commConfig = commConfig;
         registerReceiver();
@@ -69,6 +99,13 @@ public abstract class BluetoothManager {
     public void openBluetooth(Activity activity) {
         Intent enableBtIntent = new Intent(BluetoothAdapter.ACTION_REQUEST_ENABLE);
         activity.startActivityForResult(enableBtIntent, 1);
+    }
+
+    //隐式打开蓝牙
+    public void openBluetooth() {
+        if (bluetoothAdapter.disable()) {
+            bluetoothAdapter.enable();
+        }
     }
 
     /**
@@ -150,6 +187,11 @@ public abstract class BluetoothManager {
         discoverableIntent.putExtra(BluetoothAdapter.EXTRA_DISCOVERABLE_DURATION, 300);   //设备处于可检测到模式的时间设置为 5 分钟(300 秒)
         discoverableIntent.addFlags(Intent.FLAG_ACTIVITY_NEW_TASK);
         context.startActivity(discoverableIntent);
+    }
+
+    //是否支持BLE蓝牙
+    public boolean isSupportBle() {
+        return context.getPackageManager().hasSystemFeature(PackageManager.FEATURE_BLUETOOTH_LE);
     }
 
     public void startScan_1(BlueScanListener blueScanListener) {

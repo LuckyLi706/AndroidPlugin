@@ -1,16 +1,18 @@
 package com.lucky.commplugin.bluetooth.client;
 
+import android.bluetooth.BluetoothDevice;
 import android.bluetooth.BluetoothGatt;
 import android.bluetooth.BluetoothGattCallback;
 import android.bluetooth.BluetoothGattCharacteristic;
 import android.bluetooth.BluetoothGattDescriptor;
 import android.bluetooth.BluetoothGattService;
+import android.bluetooth.BluetoothProfile;
 import android.os.Build;
 
 import androidx.annotation.RequiresApi;
 
 import com.lucky.commplugin.bluetooth.BluetoothManager;
-import com.lucky.commplugin.listener.BleBlueToothListener;
+import com.lucky.commplugin.listener.ClientConnectListener;
 import com.lucky.commplugin.listener.ReadListener;
 
 import java.lang.reflect.Field;
@@ -28,6 +30,8 @@ public class BleClient extends BluetoothManager {
     private BluetoothGattService bluetoothGattService;
     private BluetoothGattCharacteristic writeCharacteristic;
     private BluetoothGattCharacteristic notifyCharacteristic;
+
+    private ClientConnectListener clientConnectListener;
 
     private UUID SERVICE_UUID;    //主服务的UUID
     private UUID RX_UUID;         //写的UUID
@@ -63,7 +67,7 @@ public class BleClient extends BluetoothManager {
         }
         try {
             writeCharacteristic.setValue(value);
-            boolean status = bluetoothGatt.writeCharacteristic(writeCharacteristic);
+            bluetoothGatt.writeCharacteristic(writeCharacteristic);
         } catch (Exception e) {
             e.printStackTrace();
         }
@@ -83,15 +87,13 @@ public class BleClient extends BluetoothManager {
                 return true;
             }
         }
-        if ((System.currentTimeMillis() - enterTime) >= HONEY_CMD_TIMEOUT) {
-        }
         return false;
     }
 
     private boolean callBackDiscovered = false;
     private long connectTime;
 
-    private BluetoothGattCallback callback = new BluetoothGattCallback() {
+    private final BluetoothGattCallback bluetoothGattCallback = new BluetoothGattCallback() {
         /**
          * 133 ：连接超时或未找到设备.
          * 8 ： 设备超出范围
@@ -106,24 +108,12 @@ public class BleClient extends BluetoothManager {
                                             int newState) {
 
 
-            if (status != BluetoothGatt.GATT_SUCCESS) {
-
+            if (status == BluetoothGatt.GATT_SUCCESS && newState == BluetoothProfile.STATE_CONNECTED) {
+                gatt.discoverServices(); //启动服务发现
+                clientConnectListener.connectSuccess();
             } else {
-                if (newState == BluetoothGatt.STATE_CONNECTED) {
-                    connectTime = System.currentTimeMillis();
-                    callBackDiscovered = false;
-                    //count = 0;
-                    // 开始扫描服务，安卓蓝牙开发重要步骤之一
-
-                    gatt.discoverServices();
-                    //startDiscoverThread();
-                } else if (newState == BluetoothGatt.STATE_DISCONNECTED) {
-                    // 连接断开
-                    /*连接断开后的相应处理*/
-                    //blueToothListener.connect(false);
-                    // bluetoothGatt = null;
-                    bluetoothGatt.close();
-                }
+                close();
+                clientConnectListener.connectFail(new Exception(gatt.toString()));
             }
         }
 
@@ -180,31 +170,42 @@ public class BleClient extends BluetoothManager {
         public void onCharacteristicChanged(BluetoothGatt gatt,
                                             BluetoothGattCharacteristic characteristic) {
             super.onCharacteristicChanged(gatt, characteristic);
-            blueToothListener.readBleData(characteristic.getValue());
+            readListener.readData(characteristic.getValue());
         }
     };
 
-    private BleBlueToothListener blueToothListener;
+    private ReadListener readListener;
 
     @Override
     public void read(ReadListener readListener) {
-
+        this.readListener = readListener;
     }
 
     @Override
-    public void write(String data) {
+    public void write(String data) throws Exception {
         if (writeCharacteristic != null) {
             byte[] b = hexStringToByteArray(data);
             writeCharacteristic(b);
         } else {
+            throw new Exception("writeCharacteristic is NULL");
         }
     }
 
     @Override
-    public void write(byte[] b) {
+    public void connect(BluetoothDevice bluetoothDevice, ClientConnectListener clientConnectListener) throws Exception {
+        if (context == null) {
+            throw new Exception("Context is NULL");
+        }
+        this.clientConnectListener = clientConnectListener;
+        bluetoothDevice.connectGatt(context, false, bluetoothGattCallback);
+    }
+
+    @Override
+    public void write(byte[] b) throws Exception {
         if (writeCharacteristic != null) {
             writeCharacteristic(b);
         } else {
+            throw new Exception("writeCharacteristic is NULL");
         }
     }
 
