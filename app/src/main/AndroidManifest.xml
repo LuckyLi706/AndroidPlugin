@@ -47,6 +47,9 @@
         <activity android:name=".ui.activity.CacheActivity" />
         <activity android:name=".ui.activity.CameraActivity" />
         <activity android:name=".ui.activity.DangerInfoActivity" />
+        <activity android:name=".ui.activity.comm.BlueMessageActivity" />
+
+        <activity android:name=".ui.activity.comm.BlueScanActivity" />
 
         <activity android:name=".ui.activity.CommActivity">
             <intent-filter>

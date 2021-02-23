@@ -9,6 +9,26 @@ public class CommConfig {
     final String classicUUID; //经典蓝牙的UUID
     final String serverIP;  //局域网通信的ip
     final int serverPort;   //局域网通信的port
+    final String bleServiceUUID;
+    final String bleWriteUUID;
+    final String bleNotifyUUID;
+    final String blueDescNotifyUUID;
+
+    public String getBlueDescNotifyUUID() {
+        return blueDescNotifyUUID;
+    }
+
+    public String getBleServiceUUID() {
+        return bleServiceUUID;
+    }
+
+    public String getBleWriteUUID() {
+        return bleWriteUUID;
+    }
+
+    public String getBleNotifyUUID() {
+        return bleNotifyUUID;
+    }
 
     public String getServerIP() {
         return serverIP;
@@ -48,8 +68,12 @@ public class CommConfig {
         stopBits = builder.stopBits;
         parity = builder.parity;
         classicUUID = builder.classicUUID;
+        bleNotifyUUID = builder.bleNotifyUUID;
+        bleServiceUUID = builder.bleServiceUUID;
+        bleWriteUUID = builder.bleWriteUUID;
         serverIP = builder.serverIP;
         serverPort = builder.serverPort;
+        blueDescNotifyUUID = builder.blueDescNotifyUUID;
     }
 
     public static final class Builder {
@@ -61,6 +85,10 @@ public class CommConfig {
         String classicUUID;  //经典蓝牙的UUID
         String serverIP;  //局域网通信的ip
         int serverPort;   //局域网通信的port
+        String bleServiceUUID; //低功耗蓝牙主UUID
+        String bleWriteUUID;  //低功耗蓝牙写入的UUID
+        String bleNotifyUUID; //低功耗蓝牙读取的UUID
+        String blueDescNotifyUUID; //低功耗蓝牙的描述信息
 
         public Builder() {
             baudRate = 115200;
@@ -68,8 +96,12 @@ public class CommConfig {
             stopBits = 1;
             parity = 0;
             classicUUID = Constants.CLASSIC_BLUE_UUID;
+            bleNotifyUUID = Constants.BLE_BLUE_NOTIFY_UUID;
+            bleServiceUUID = Constants.BLE_BLUE_SERVICE_UUID;
+            bleWriteUUID = Constants.BLE_BLUE_WRITE_UUID;
             serverIP = Constants.SERVER_IP;
             serverPort = Constants.SERVER_PORT;
+            blueDescNotifyUUID = Constants.BLE_BLUE_DESC_NOTIFY_UUID;
         }
 
         public Builder baudRate(int baudRate) {
@@ -104,6 +136,26 @@ public class CommConfig {
 
         public Builder serverPort(int port) {
             this.serverPort = port;
+            return this;
+        }
+
+        public Builder bleNotifyUUID(String bleNotifyUUID) {
+            this.bleNotifyUUID = bleNotifyUUID;
+            return this;
+        }
+
+        public Builder bleWriteUUID(String bleWriteUUID) {
+            this.bleWriteUUID = bleWriteUUID;
+            return this;
+        }
+
+        public Builder bleServiceUUID(String bleServiceUUID) {
+            this.bleServiceUUID = bleServiceUUID;
+            return this;
+        }
+
+        public Builder blueDescNotifyUUID(String blueDescNotifyUUID) {
+            this.blueDescNotifyUUID = blueDescNotifyUUID;
             return this;
         }
 

@@ -3,6 +3,7 @@ package com.example.androidplugin.ui.adpater;
 import android.annotation.SuppressLint;
 import android.bluetooth.BluetoothDevice;
 import android.content.Context;
+import android.content.Intent;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
@@ -15,6 +16,7 @@ import androidx.annotation.NonNull;
 import androidx.recyclerview.widget.RecyclerView;
 
 import com.example.androidplugin.R;
+import com.example.androidplugin.ui.activity.comm.BlueMessageActivity;
 
 import java.util.List;
 
@@ -22,11 +24,13 @@ public class BlueScanAdapter extends RecyclerView.Adapter<BlueScanAdapter.MyView
 
     private Context context;
     private List<BluetoothDevice> mDatas;
+    private String name;
 
 
-    public BlueScanAdapter(Context context, List<BluetoothDevice> mDatas) {
+    public BlueScanAdapter(Context context, List<BluetoothDevice> mDatas, String name) {
         this.mDatas = mDatas;
         this.context = context;
+        this.name = name;
     }
 
     @NonNull
@@ -39,7 +43,15 @@ public class BlueScanAdapter extends RecyclerView.Adapter<BlueScanAdapter.MyView
     @SuppressLint({"SetTextI18n", "ResourceAsColor"})
     @Override
     public void onBindViewHolder(@NonNull MyViewHolder holder, int position) {
-
+        holder.tv_name.setText(mDatas.get(position).getName() == null ? "NULL" : mDatas.get(position).getName());
+        holder.tv_mac.setText(mDatas.get(position).getAddress());
+        holder.btn_connect.setOnClickListener(v -> {
+            Intent intent = new Intent(context, BlueMessageActivity.class);
+            BluetoothDevice bluetoothDevice = mDatas.get(position);
+            intent.putExtra("blue", bluetoothDevice);
+            intent.putExtra("name", name);
+            context.startActivity(new Intent(context, BlueMessageActivity.class));
+        });
     }
 
 

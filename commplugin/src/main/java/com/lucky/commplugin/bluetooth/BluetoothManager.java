@@ -79,7 +79,7 @@ public abstract class BluetoothManager {
     protected CommConfig commConfig;
 
 
-    public void initBluetooth(Context context, CommConfig commConfig) throws Exception {
+    public void initBluetooth(Context context, CommConfig commConfig) {
         this.context = context.getApplicationContext();
         if (bluetoothManager == null) {
             bluetoothManager = (android.bluetooth.BluetoothManager) context.getSystemService(Context.BLUETOOTH_SERVICE);
@@ -209,7 +209,6 @@ public abstract class BluetoothManager {
     public void startScan_2(BlueScanListener blueScanListener) {
         this.blueScanListener = blueScanListener;
         bluetoothAdapter.startLeScan(leScanCallback);
-
     }
 
     public void stopScan_2() {
@@ -252,7 +251,8 @@ public abstract class BluetoothManager {
     public abstract void close();
 
     public void release() {
-
+        unregisterDiscovery();
+        unregisterReceiver();
     }
 
     private BluetoothAdapter.LeScanCallback leScanCallback = new BluetoothAdapter.LeScanCallback() {
@@ -277,6 +277,7 @@ public abstract class BluetoothManager {
         @Override
         public void onScanFailed(int errorCode) {
             super.onScanFailed(errorCode);
+            LogUtil.d("扫描失败:" + errorCode);
         }
     };
 

@@ -36,8 +36,6 @@ dependencies {
     implementation project(path: ':cacheplugin')
     implementation project(path: ':cameraplugin')
     implementation project(path: ':intentplugin')
-
+    implementation 'com.lucky.commplugin:commplugin:1.1.0'
     implementation 'com.google.android.material:material:1.2.1'
-
-    implementation 'com.lucky.commplugin:commplugin:1.0.0'
 }

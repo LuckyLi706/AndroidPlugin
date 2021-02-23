@@ -1,5 +1,6 @@
 package com.lucky.commplugin.bluetooth.server;
 
+import android.annotation.SuppressLint;
 import android.bluetooth.BluetoothDevice;
 import android.bluetooth.BluetoothGatt;
 import android.bluetooth.BluetoothGattCharacteristic;
@@ -27,15 +28,27 @@ import java.util.UUID;
 
 public class BleServer extends BluetoothManager {
 
-    public static final UUID UUID_SERVICE = UUID.fromString("10000000-0000-0000-0000-000000000000"); //自定义UUID
-    public static final UUID UUID_CHAR_READ_NOTIFY = UUID.fromString("11000000-0000-0000-0000-000000000000");
-    public static final UUID UUID_DESC_NOTITY = UUID.fromString("11100000-0000-0000-0000-000000000000");
-    public static final UUID UUID_CHAR_WRITE = UUID.fromString("12000000-0000-0000-0000-000000000000");
+
     private BluetoothLeAdvertiser mBluetoothLeAdvertiser; // BLE广播
     private BluetoothGattServer mBluetoothGattServer; // BLE服务端
 
+    private BluetoothGattDescriptor descriptor;
+    //private BluetoothDevice bluetoothDevice;
+
+    @SuppressLint("StaticFieldLeak")
+    private static final BleServer server = new BleServer();
+
+    private BleServer() {
+
+    }
+
+    public static BleServer getInstance() {
+        return server;
+    }
+
     @Override
     public void write(String data) throws Exception {
+        // 简单模拟通知客户端Characteristic变化
 
     }
 
@@ -70,7 +83,7 @@ public class BleServer extends BluetoothManager {
         //扫描响应数据(可选，当客户端扫描时才发送)
         AdvertiseData scanResponse = new AdvertiseData.Builder()
                 .addManufacturerData(2, new byte[]{66, 66}) //设备厂商数据，自定义
-                .addServiceUuid(new ParcelUuid(UUID_SERVICE)) //服务UUID
+                .addServiceUuid(new ParcelUuid(UUID.fromString(commConfig.getBleServiceUUID()))) //服务UUID
                 //      .addServiceData(new ParcelUuid(UUID_SERVICE), new byte[]{2}) //服务数据，自定义
                 .build();
         mBluetoothLeAdvertiser = bluetoothAdapter.getBluetoothLeAdvertiser();
@@ -78,14 +91,14 @@ public class BleServer extends BluetoothManager {
 
         // 注意：必须要开启可连接的BLE广播，其它设备才能发现并连接BLE服务端!
         // =============启动BLE蓝牙服务端=====================================================================================
-        BluetoothGattService service = new BluetoothGattService(UUID_SERVICE, BluetoothGattService.SERVICE_TYPE_PRIMARY);
+        BluetoothGattService service = new BluetoothGattService(UUID.fromString(commConfig.getBleServiceUUID()), BluetoothGattService.SERVICE_TYPE_PRIMARY);
         //添加可读+通知characteristic
-        BluetoothGattCharacteristic characteristicRead = new BluetoothGattCharacteristic(UUID_CHAR_READ_NOTIFY,
+        BluetoothGattCharacteristic characteristicRead = new BluetoothGattCharacteristic(UUID.fromString(commConfig.getBleNotifyUUID()),
                 BluetoothGattCharacteristic.PROPERTY_READ | BluetoothGattCharacteristic.PROPERTY_NOTIFY, BluetoothGattCharacteristic.PERMISSION_READ);
-        characteristicRead.addDescriptor(new BluetoothGattDescriptor(UUID_DESC_NOTITY, BluetoothGattCharacteristic.PERMISSION_WRITE));
+        characteristicRead.addDescriptor(new BluetoothGattDescriptor(UUID.fromString(commConfig.getBlueDescNotifyUUID()), BluetoothGattCharacteristic.PERMISSION_WRITE));
         service.addCharacteristic(characteristicRead);
         //添加可写characteristic
-        BluetoothGattCharacteristic characteristicWrite = new BluetoothGattCharacteristic(UUID_CHAR_WRITE,
+        BluetoothGattCharacteristic characteristicWrite = new BluetoothGattCharacteristic(UUID.fromString(commConfig.getBleWriteUUID()),
                 BluetoothGattCharacteristic.PROPERTY_WRITE, BluetoothGattCharacteristic.PERMISSION_WRITE);
         service.addCharacteristic(characteristicWrite);
         if (bluetoothAdapter != null)
@@ -111,6 +124,7 @@ public class BleServer extends BluetoothManager {
     private final BluetoothGattServerCallback mBluetoothGattServerCallback = new BluetoothGattServerCallback() {
         @Override
         public void onConnectionStateChange(BluetoothDevice device, int status, int newState) {
+            //bluetoothDevice = device;
             LogUtil.d(String.format("onConnectionStateChange:%s,%s,%s,%s", device.getName(), device.getAddress(), status, newState));
         }
 
@@ -151,7 +165,6 @@ public class BleServer extends BluetoothManager {
             mBluetoothGattServer.sendResponse(device, requestId, BluetoothGatt.GATT_SUCCESS, offset, value);// 响应客户端
             LogUtil.d("客户端写入Descriptor[" + descriptor.getUuid() + "]:\n" + valueStr);
 
-            // 简单模拟通知客户端Characteristic变化
             if (Arrays.toString(BluetoothGattDescriptor.ENABLE_NOTIFICATION_VALUE).equals(valueStr)) { //是否开启通知
                 final BluetoothGattCharacteristic characteristic = descriptor.getCharacteristic();
                 new Thread(new Runnable() {

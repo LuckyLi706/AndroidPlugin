@@ -32,7 +32,7 @@ boolean multipleApp = DangerProtector.isMultipleApp(this);  //检测多开
 引入方式
 
 ```java
-implementation 'com.lucky.commplugin:commplugin:1.0.0'
+implementation 'com.lucky.commplugin:commplugin:1.1.0'
 ```
 
 初始化配置（必须）
@@ -126,7 +126,12 @@ LogUtil.setDebug(false);  //关闭日志 (默认开启)
 
 + 操作步骤
 
-1. 初始化配置（见上）
+1. 初始化配置
+
+   ```java
+   //设置波特率、数据位、停止位、校验位
+   CommConfig commConfig = new CommConfig.Builder().baudRate(115200).dataBits(8).stopBits(1).parity(0).builder();
+   ```
 
 2. 初始化USB
 
@@ -197,7 +202,19 @@ LogUtil.setDebug(false);  //关闭日志 (默认开启)
 
 ### 蓝牙通信
 
-1. 初始化配置（见上）
+1. 初始化配置
+
+   ```java
+   //经典蓝牙客户端（服务端UUID）
+   CommConfig commConfig = new CommConfig.Builder().classicUUID("").builder();
+   
+   //低功耗蓝牙客户端（服务端的主服务UUID、读UUID、写UUID）
+   CommConfig commConfig = new CommConfig.Builder().bleServiceUUID("").bleNotifyUUID("").bleWriteUUID("").builder();
+   
+   //低功耗蓝牙服务端（可以自定义主服务UUID、读UUID、写UUID、描述信息UUID）
+   CommConfig commConfig = new CommConfig.Builder().bleServiceUUID("").bleNotifyUUID("").bleWriteUUID("").blueDescNotifyUUID("").builder();
+   
+   ```
 
 2. 蓝牙扫描（作为客户端需要做扫描操作）
 
@@ -239,6 +256,12 @@ LogUtil.setDebug(false);  //关闭日志 (默认开启)
 
    ```java
    ClassicServer.getInstance().enableDiscovery();
+   ```
+
+4. 初始化蓝牙
+
+   ```java
+   ClassicClient.getInstance().initBluetooth(Context context, CommConfig commConfig);
    ```
 
 #### 经典蓝牙
@@ -362,7 +385,64 @@ LogUtil.setDebug(false);  //关闭日志 (默认开启)
      ClassicServer.getInstance().release();
      ```
 
-#### 低功耗蓝牙（待补充）
+#### 低功耗蓝牙
+
++ 客户端
+
+  1. 连接
+
+     ```java
+     BleClient.getInstance().connect(bluetoothDevice, new ClientConnectListener() {
+                             @Override
+                             public void connectSuccess() {
+                                 ClassicClient.getInstance().read(BlueMessageActivity.this);
+                             }
+     
+                             @Override
+                             public void connectFail(Exception e) {
+                                 Toast.makeText(BlueMessageActivity.this, "连接发生异常：" + e.getMessage(), Toast.LENGTH_SHORT).show();
+                             }
+                         });
+     ```
+
+  2. 写数据
+
+     ```java
+     BleClient.getInstance().write(String data) throws Exception  //写十六进制字符串
+     BleClient.getInstance().write(byte[] data) throws Exception  //写字节数组
+     ```
+
+  3. 读数据
+
+     ```java
+     BleClient.getInstance().read(new ReadListener() {
+                             @Override
+                             public void readData(byte[] b) {
+                                 runOnUiThread(() -> Toast.makeText(CommActivity.this, new String(b), Toast.LENGTH_SHORT).show());
+                             }
+     
+                             @Override
+                             public void readError(Exception e) {
+                                 runOnUiThread(() -> Toast.makeText(CommActivity.this, "读取异常:" + e.getMessage(), Toast.LENGTH_SHORT).show());
+                             }
+                         });
+     ```
+
+  4. 关闭蓝牙
+
+     ```java
+     BleClient.getInstance().close();
+     ```
+
+  5. 释放资源
+
+     ```java
+     BleClient.getInstance().release();
+     ```
+
++ 服务端
+
+  1. 初始化蓝牙之后就自启动了（目前测试阶段）
 
 ## 局域网通信（暂略）
 
