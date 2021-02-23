@@ -1,13 +1,28 @@
+<!-- START doctoc generated TOC please keep comment here to allow auto update -->
+<!-- DON'T EDIT THIS SECTION, INSTEAD RE-RUN doctoc TO UPDATE -->
+**Table of Contents**  *generated with [DocToc](https://github.com/thlorenz/doctoc)*
+
+- [安卓库](#%E5%AE%89%E5%8D%93%E5%BA%93)
+  - [危险信息检测库](#%E5%8D%B1%E9%99%A9%E4%BF%A1%E6%81%AF%E6%A3%80%E6%B5%8B%E5%BA%93)
+  - [硬件通信库](#%E7%A1%AC%E4%BB%B6%E9%80%9A%E4%BF%A1%E5%BA%93)
+    - [USB通信](#usb%E9%80%9A%E4%BF%A1)
+    - [蓝牙通信](#%E8%93%9D%E7%89%99%E9%80%9A%E4%BF%A1)
+      - [经典蓝牙](#%E7%BB%8F%E5%85%B8%E8%93%9D%E7%89%99)
+      - [低功耗蓝牙](#%E4%BD%8E%E5%8A%9F%E8%80%97%E8%93%9D%E7%89%99)
+  - [局域网通信（暂略）](#%E5%B1%80%E5%9F%9F%E7%BD%91%E9%80%9A%E4%BF%A1%E6%9A%82%E7%95%A5)
+
+<!-- END doctoc generated TOC please keep comment here to allow auto update -->
+
 # 安卓库
 ## 危险信息检测库
 
 引入方式
-```
+```groovy
 implementation 'cn.lucky.dangerinfoplugin:danagerinfoplugin:1.0.0'
 ```
 
 调用方式
-```
+```java
 LogUtil.setDebug(false);  //关闭日志 
 boolean emulator = DangerProtector.isEmulator(this);  //检测模拟器
 boolean root = DangerProtector.isRoot(this);   //检测root
@@ -17,7 +32,7 @@ boolean multipleApp = DangerProtector.isMultipleApp(this);  //检测多开
 ```
 
 日志信息（检测到相关信息的日志）
-```
+```java
 08-20 16:31:24.849 1873-1873/com.example.androidplugin D/lucky: --------模拟器信息--------
 08-20 16:31:24.849 1873-1873/com.example.androidplugin D/lucky: --------模拟器名字:MUMU模拟器--------
 08-20 16:31:24.849 1873-1873/com.example.androidplugin D/lucky: --------模拟器识别的tag1:11111-111-1--------
